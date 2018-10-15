@@ -1,0 +1,35 @@
+#!/bin/bash
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
+##                                                                    ##
+##	Script to calculate the eigenvalues and eigen vectors         ##
+##      of the SSTa, save 2 netcdf files (1 all eigenvalues; 2        ##
+##	specified number of modes for the eigenvectors                ##
+##      Then, calculate the principale componets of the chosen modes  ##
+##      and merge the PCs into 1 file with modes and time as          ##
+##      dimensions						      ##
+##                                                                    ##
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
+date
+set -x
+
+F_O_DIR=/v_Munk_Drive/ecougnon/scripts/cdo_tool/
+F_D_DIR=/v_Munk_Drive/ecougnon/ana
+
+# extract to get a 1x1 deg grid (instead of 1/4)
+ncecat -F -d lat,1,,4 -d lon,1,,4 -v sst /v_Munk_Drive/ecougnon/ana/SSTa_daily_trend_Aus.nc out_test.nc
+ 
+# calc eigen-values and -vectors
+cdo eoftime,12 ${F_D_DIR}/SSTa_daily_trend_Aus.nc eigval.nc eigvect.nc
+# calc PCs
+cdo eofcoeff eigvect.nc ${F_D_DIR}/SSTa_daily_trend_Aus.nc principalCoef.nc 
+
+# concatanate the PCs along a new dimension -- modes
+cdo merge principlaCoef.nc000??.nc PCs_tmp.nc
+ncrename -d sfc,modes PCs_tmp0.nc
+# remove the lat lon dimension, useless here
+ncwa -a lat PCs_tmp0.nc PCs_tmp1.nc
+ncwa -a lon PCs_tmp1.nc PCs_tmp2.nc
+
+mv PCs_tmp.nc ${F_O_DIR}/PCs.nc
+rm principalCoef.nc000??.nc
+

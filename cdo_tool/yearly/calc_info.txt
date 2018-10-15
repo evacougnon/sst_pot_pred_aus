@@ -1,0 +1,7 @@
+
+cdo eoftime,12 SSTa_yearly_trend_NaN0.nc outfile1_spa.nc outfile2_spa.nc
+
+cdo eofcoeff outfile2_spa.nc SSTa_yearly_trend_NaN0.nc PC_yearly_ &
+cdo eofcoeff outfile2_spa.nc SSTa_monthly_trend.nc PC_yearlyONmonthly_ &
+
+
