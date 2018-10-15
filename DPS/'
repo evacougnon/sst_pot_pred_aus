@@ -1,0 +1,245 @@
+'''
+    Calc and plot the mhw/cold spell time series of the specified
+    member (ensemble of the 96 memners used or the 11 individual 
+    members available for specific analyses
+
+    Uses the Hobday et al. 2016 definition of a mhw
+
+    Author: Eva Cougnon
+    Date created: Apr 2018
+    Modified: 
+
+'''
+# load required modules
+
+import numpy as np
+import xarray as xr
+import pandas as pd
+#import time as time
+from datetime import date
+from geopy.distance import vincenty # distance lat/lon
+
+from scipy import io # load matlab file
+from scipy import signal # detrend
+import scipy.stats.mstats as st # highly similar to scipy.stats 
+                                # but adapted for masked arrays
+
+from matplotlib import pyplot as plt
+import matplotlib
+import mpl_toolkits.basemap as bm
+import cmocean
+
+import sys
+sys.path.insert(0,'/home/ecougnon/scripts/libraries/')
+import eric_oliver as eo
+import marineHeatWaves as mhw
+import eac_useful as eac
+
+#figfile ='/home/ecougnon/ana/MHW_paper_SarahKirkpatrick/SSTa_mhw_west_tas.png'
+
+##########################
+# define some conditions
+##########################
+# define which member to plot
+'''
+    WHICH == '00' ensemble mean
+    WHICH == ['01':'11'] individual member
+    WHICH == 'all' will plot each members in grey overlaid by the
+		ensemble mean in black
+'''
+WHICH = 'all'  #'all' # '01'
+# define indexes for lat lon of one pixel
+# !!! LONGITUDE in the model!!! from -280 to 80 deg E
+'''
+info on the regions: 
+        Tasman Sea Box with extended western boundary:
+                lat[-46:-26]; lon[135:174]E
+        SE Aus, Oliver et al. 2017 box: 
+                lat[-45:-37]; lon[147:155]E
+        west Tasmania, west of the above box:
+                lat[-45:-37]; lon[139:147]E
+        western Australia (box used in Ming Feng studies)
+		lat[-32:-28]; lon[112:115]E
+'''
+lat_min = -45 #-55 #-45 #-46 # deg N
+lat_max = -37 #10 #-37 #-26
+lon_min = 147 - 360 #90  #139 #147 #135 #150 # deg E
+lon_max = 155 - 360 #180 #147 #155 #174
+
+################################
+# load the model data and 
+# area-avearged them
+################################
+header = '/home/ecougnon/data/DPS/forecast/'
+header_reana = '/home/ecougnon/data/DPS/reanalysis/ETKF/'
+gname = header + 'RAW/ocean_daily_2002_01_01.nc'
+area = xr.open_dataset(gname)['area_t'].sel(yt_ocean=slice(lat_min,lat_max), \
+                                            xt_ocean=slice(lon_min,lon_max))
+
+if WHICH == '00' or 'all':
+    fname = header + 'sst_daily_Aus_ensemble.nc'
+    fname_reana = header_reana + 'sst_reana_ETKF_mem001_20032017_daily_Aus.nc'
+else:
+    fname = header + 'sst_daily_Aus_mem0' + WHICH + '.nc'
+
+if WHICH == 'all':
+# load reanalysis
+    sst_reana = xr.open_dataset(fname_reana)['temp'].sel(yt_ocean=slice(lat_min, \
+                                                                        lat_max), \
+                                                  xt_ocean=slice(lon_min,lon_max), \
+                                                  time=slice('2007-01-01','2010-12-31'))
+# load the forecast runs
+    sst_ens = xr.open_dataset(fname)['sst'].sel(yt_ocean=slice(lat_min,lat_max), \
+                                                xt_ocean=slice(lon_min,lon_max), \
+                                                time=slice('2007-01-01','2010-12-31'))
+
+    mask_land = np.ones((len(sst_ens.yt_ocean),len(sst_ens.xt_ocean)))
+    mask_land = np.ma.masked_where((np.squeeze(sst_ens[100,:,:]))<-1e15, mask_land)
+    area = area * mask_land
+    weight = area/np.nansum(area)
+
+    sst_ens = ((sst_ens*weight).sum(dim=('yt_ocean','xt_ocean')))
+# detrend the forecast (remove model drift)
+    sst_ens = signal.detrend(sst_ens, axis=0, type='linear') \
+              + np.mean(sst_ens)
+
+    sst_reana = ((sst_reana*weight).sum(dim=('yt_ocean','xt_ocean')))
+
+    tim_mem_tmp = pd.date_range('2007-01-01','2010-11-22',name='time',freq='D')
+    sst_mem = np.NaN*np.zeros((11,len(tim_mem_tmp))) 
+    for ii in range(1,12):
+        if ii < 10:
+            tmp = xr.open_dataset(header + 'sst_daily_Aus_mem00' + str(ii) +'.nc')['sst']. \
+                      sel(yt_ocean=slice(lat_min,lat_max), \
+                          xt_ocean=slice(lon_min,lon_max), \
+                          time=slice('2007-01-01','2010-12-31'))
+        elif ii >= 10:
+            tmp = xr.open_dataset(header + 'sst_daily_Aus_mem0' + str(ii) +'.nc')['sst']. \
+                         sel(yt_ocean=slice(lat_min,lat_max), \
+                             xt_ocean=slice(lon_min,lon_max), \
+                             time=slice('2007-01-01','2010-12-31'))
+# area-averaged sst
+        sst_mem[ii-1,:] = ((tmp*weight).sum(dim=('yt_ocean','xt_ocean')))
+# detrend the forecast (remove model drift)
+    sst_mem = signal.detrend(sst_mem, axis=1, type='linear') \
+              + np.mean(sst_mem, axis=1)
+
+else:
+    sst = xr.open_dataset(fname)['sst'].sel(yt_ocean=slice(lat_min,lat_max), \
+                                            xt_ocean=slice(lon_min,lon_max), \
+                                            time=slice('2003-01-01','2010-12-31'))
+    mask_land = np.ones((len(sst.yt_ocean),len(sst.xt_ocean)))
+    mask_land = np.ma.masked_where((np.squeeze(sst[100,:,:]))<-1e10, mask_land)
+    area = area * mask_land
+    area_tot_ocean = np.nansum(area)
+    weight = area/area_tot_ocean
+# area-averaged sst
+    sst_aa = ((sst*weight).sum(dim=('yt_ocean','xt_ocean')))
+
+####################################
+## apply the MHW code
+####################################
+#time vector for the mhw function!!!
+# needs to be generated wth datetime format!
+MinYear = 2007
+MaxYear = 2010 # warninng, so far finishes in Jan!!
+NumYears = MaxYear-MinYear+1
+MaxNumLeapYear = NumYears//4 + 1 # use only the integer (+1 is used in 
+                                     # case the first year is a leap year
+NumDays = 365*NumYears + MaxNumLeapYear
+# WARNING different finish time
+if WHICH == '00':
+    dtime = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,10,25). \
+                                        toordinal()+1)
+# time vector for plotting with mhw
+    tim_vec_plot = pd.date_range('2003-01-01','2010-10-25',name='time',freq='D')
+elif WHICH == 'all':
+    dtime_reana = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,12,31). \
+                                              toordinal()+1)
+    tim_vec_plot_reana = pd.date_range('2007-01-01','2010-12-31',name='time',freq='D')
+
+    dtime_ens = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,10,25). \
+                                            toordinal()+1)
+    tim_ens_plot = pd.date_range('2007-01-01','2010-10-25',name='time',freq='D')
+    dtime_mem = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,11,22). \
+                                            toordinal()+1)
+    tim_mem_plot = pd.date_range('2007-01-01','2010-11-22',name='time',freq='D')
+else:
+    dtime = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,11,22). \
+                                        toordinal()+1)
+# time vector for plotting with mhw
+    tim_vec_plot = pd.date_range('2003-01-01','2010-11-22',name='time',freq='D')
+    sst_mean_d = np.array(sst_aa)
+if WHICH != 'all':
+    sst_mean_d = np.array(sst_aa)
+    mhws, clim = mhw.detect(dtime, sst_mean_d, climatologyPeriod=[2003,2006])
+
+####################################
+# Plotting
+####################################
+plt.figure(figsize=(13,12)) 
+
+if WHICH != 'all':
+    ax = plt.subplot(211)
+    plt.plot(tim_vec_plot, clim['seas'], '0.5')
+    plt.plot(tim_vec_plot, sst_mean_d, 'k')
+    plt.plot(tim_vec_plot, clim['thresh'],'b')
+    plt.legend(['climatology','SST daily','threshold'])
+    ax.set_xlim(['2003-01-01','2010-12-31'])
+    ax.set_ylim([10, 22])
+#ax.fill_between(tim_vec_plot, sst_mean_d, \
+#                where=sst_mean_d>= clim['thresh'], \
+#                facecolor='red', alpha=0.5, \
+#               interpoate=True)
+    plt.title('SST Tasman Sea Box area', fontsize=16)
+    plt.grid()
+
+    ax = plt.subplot(212)
+    plt.plot(tim_vec_plot, sst_mean_d-clim['seas'], 'k')
+    ax.set_xlim(['2003-01-01','2010-12-31'])
+    ax.set_ylim([-3, 3])
+    plt.title('SSTa Tasman Sea Box area', fontsize=16)
+    plt.grid()
+
+elif WHICH == 'all':
+    ax = plt.subplot(211)
+    for ii in range(0,11):
+        ax.plot(tim_mem_plot, sst_mem[ii,:], '0.5', label='F mem')
+#    ax.plot(tim_ens_plot, sst_ens, 'k', label= 'F ens mean')
+    ax.plot(tim_vec_plot_reana, sst_reana, 'r', label= 'R ens mean')
+    ax.plot(tim_ens_plot, sst_ens, 'k', label= 'F ens mean')
+    ax.set_xlim(['2007-01-01','2010-12-31'])
+    ax.set_ylim([18, 28])
+    handles, labels = ax.get_legend_handles_labels()
+    handles = [handles[-3], handles[-1], handles[-2]]
+    labels = [labels[-3], labels[-1], labels[-2]]
+    ax.legend(handles,labels)
+    plt.title('SST for a specified region (-32 -28oN -- 112 115oE)')
+    plt.grid()
+
+    ax = plt.subplot(212)
+    for ii in range(0,11):
+        mhws, clim = mhw.detect(dtime_mem, sst_mem[ii,:], \
+                                climatologyPeriod=[2007,2010])
+        plt.plot(tim_mem_plot, sst_mem[ii,:]-clim['seas'], '0.5')
+
+    tmp_sst_reana = np.array(sst_reana)
+    mhws, clim = mhw.detect(dtime_reana, tmp_sst_reana, climatologyPeriod=[2007,2010])
+    plt.plot(tim_vec_plot_reana, tmp_sst_reana-clim['seas'], 'r')
+    tmp_sst = np.array(sst_ens)
+    mhws, clim = mhw.detect(dtime_ens, tmp_sst, climatologyPeriod=[2007,2010])
+    plt.plot(tim_ens_plot, tmp_sst-clim['seas'], 'k')
+#    tmp_sst_reana = np.array(sst_reana)
+#    mhws, clim = mhw.detect(dtime_reana, tmp_sst_reana, climatologyPeriod=[2003,2006])
+#    plt.plot(tim_vec_plot_reana, tmp_sst_reana-clim['seas'], 'r')
+    ax.set_xlim(['2007-01-01','2010-12-31'])
+    ax.set_ylim([-3, 4])
+    plt.title('SSTa for a specified region -- climatology based on 2003-2006', \
+              fontsize=16)
+    plt.grid()
+
+#    figfile = header + 'plots/SST_SSTa_WARegion_zoom_assim.png'
+#    plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+
+plt.show()
+
