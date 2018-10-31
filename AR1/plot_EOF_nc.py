@@ -30,8 +30,8 @@ fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
 #eof_Aus_daily_1deg_12modes.nc'
 fname_ppr = '../../ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
 
-figfile ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/EOFmaps_PCsm_5-8modes_SSTatrend.png'
-figfile2 ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/NorthTest_SSTatrend.png'
+figfile ='../../ana/PotPred/vSZ/EOF/EOFmaps_PCsm_1-4modes_SSTatrend.png'
+#figfile2 ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/NorthTest_SSTatrend.png'
 #figfile_psd ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/PCsm_psd_5-8modes_SSTatrend.png'
 #figfile_psdall ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/PCsm_psdall_5-8modes_SSTatrend_zoom.png'
 
@@ -42,7 +42,7 @@ MinYear=1982
 MaxYear=2016
 
 # what to plot
-hmode = 5 # give the highest mode of 4 to be plotted
+hmode = 1 # give the highest mode of 4 to be plotted
 
 # load ppr
 lat_map = xr.open_dataset(fname_ppr)['lat']
@@ -59,7 +59,7 @@ PP = (xr.open_dataset(fname_ppr)['TMM'][0,:,:] - \
 #################################################
 # NINO34
 #################################################
-file_nino34 = np.genfromtxt('/media/ecougnon/DATA/NewSverdrup/ecougnon/data/index/enso/nino34.txt', \
+file_nino34 = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino34.txt', \
                             skip_header=1, skip_footer = 6)
 str_nino34 = np.nonzero((file_nino34[:,0]>(MinYear-1)) \
                         & (file_nino34[:,0]<(MinYear+1)))
@@ -79,8 +79,9 @@ time_yr = pd.date_range('1982-01-01','2016-12-31',name='time',freq='12M')
 #########################################################
 ## plotting 
 ########################################################
-lev = np.hstack((np.arange(-0.07,-0.01+0.01,0.02), \
-                 np.arange(0.01,0.07+0.01,0.02)))
+lev = np.hstack((np.arange(-0.07,-0.001+0.001,0.01), \
+                 np.arange(0.001,0.07+0.001,0.01)))
+lev_cb = np.arange(-0.07,0.07+0.02,0.02)
 
 plt.figure(figsize=(10,17)) 
 plt.clf()
@@ -90,8 +91,10 @@ ax1.add_feature(cfeature.LAND)
 ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-hmode,:,:], \
-             levels = lev, cmap=plt.cm.seismic)
-cb=plt.colorbar(ticks=lev,shrink=0.7)
+             levels = lev, cmap=plt.cm.RdYlBu_r)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-hmode,:,:], \
+            levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
 plt.title('EOF' + str(hmode) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-hmode].values,decimals=1)) + \
@@ -102,8 +105,10 @@ ax2.add_feature(cfeature.LAND)
 ax2.coastlines('50m', linewidth=0.8)
 ax2.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+1),:,:], \
-             levels = lev, cmap=plt.cm.seismic)
-cb=plt.colorbar(ticks=lev,shrink=0.7)
+             levels = lev, cmap=plt.cm.RdYlBu_r)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+1),:,:], \
+            levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
 plt.title('EOF' + str(hmode+1) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+1)].values,decimals=1)) + \
@@ -114,8 +119,10 @@ ax3.add_feature(cfeature.LAND)
 ax3.coastlines('50m', linewidth=0.8)
 ax3.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+2),:,:], \
-             levels = lev, cmap=plt.cm.seismic)
-cb=plt.colorbar(ticks=lev,shrink=0.7)
+             levels = lev, cmap=plt.cm.RdYlBu_r)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+2),:,:], \
+            levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
 plt.title('EOF' + str(hmode+2) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+2)].values,decimals=1)) + \
@@ -126,8 +133,10 @@ ax4.add_feature(cfeature.LAND)
 ax4.coastlines('50m', linewidth=0.8)
 ax4.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+3),:,:], \
-             levels = lev, cmap=plt.cm.seismic)
-cb=plt.colorbar(ticks=lev,shrink=0.7)
+             levels = lev, cmap=plt.cm.RdYlBu_r)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+3),:,:], \
+            levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
 plt.title('EOF' + str(hmode+3) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+3)].values,decimals=1)) + \
@@ -136,8 +145,8 @@ plt.title('EOF' + str(hmode+3) +', ' \
 ax5 = plt.subplot(4,2,2)
 #r1, _ = st.spearmanr(xr.open_dataset(fname)['PCs'][-hmode,:],var_comp)
 ax_pc = plt.gca()
-plt.plot(time_month,var_comp)
-plt.plot(time_month,xr.open_dataset(fname)['PCs'][-hmode,:])
+#plt.plot(time_month,var_comp)
+plt.plot(time_month,xr.open_dataset(fname)['PCs'][-hmode,:],'k')
 #ax_pc.annotate('r = {:.2f}'.format(r1), xy=(.1,.95), xycoords=ax_pc.transAxes)
 plt.title('PC' + str(hmode) + ' with NINO3.4 index')
 plt.grid()
@@ -145,8 +154,8 @@ plt.grid()
 ax6 = plt.subplot(4,2,4)
 #r2, _ = st.spearmanr(xr.open_dataset(fname)['PCs'][-(hmode+1),:],var_comp)
 ax_pc = plt.gca()
-plt.plot(time_month,var_comp)
-plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+1),:])
+#plt.plot(time_month,var_comp)
+plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+1),:],'k')
 #ax_pc.annotate('r = {:.2f}'.format(r2), xy=(.1,.95), xycoords=ax_pc.transAxes)
 #plt.title('PC' + str(hmode+1) + ' with NINO3.4 index')
 plt.grid()
@@ -154,8 +163,8 @@ plt.grid()
 ax7 = plt.subplot(4,2,6)
 #r3, _ = st.spearmanr(xr.open_dataset(fname)['PCs'][-(hmode+2),:],var_comp)
 ax_pc = plt.gca()
-plt.plot(time_month,var_comp)
-plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+2),:])
+#plt.plot(time_month,var_comp)
+plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+2),:],'k')
 #ax_pc.annotate('r = {:.2f}'.format(r3), xy=(.1,.95), xycoords=ax_pc.transAxes)
 #plt.title('PC' + str(hmode+2) + ' with NINO3.4 index')
 plt.grid()
@@ -163,8 +172,8 @@ plt.grid()
 ax8 = plt.subplot(4,2,8)
 #r4, _ = st.spearmanr(xr.open_dataset(fname)['PCs'][-(hmode+3),:],var_comp)
 ax_pc = plt.gca()
-plt.plot(time_month,var_comp)
-plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+3),:])
+#plt.plot(time_month,var_comp)
+plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+3),:],'k')
 #ax_pc.annotate('r = {:.2f}'.format(r3), xy=(.1,.95), xycoords=ax_pc.transAxes)
 #plt.title('PC' + str(hmode+3) + ' with NINO3.4 index')
 plt.grid()
@@ -172,6 +181,7 @@ plt.grid()
 plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
 plt.show(block=False)
 
+'''
 ##################################################
 ## eigenvalues spectrum -- North et al. 1982
 ###################################################
@@ -182,7 +192,7 @@ plt.title('Eigenvalues spectrum -- North et al. 1982')
 plt.xlabel('EOF modes (1-12)')
 plt.ylabel('Eigenvalue (%)')
 plt.grid()
-plt.savefig(figfile2, bbox_inches='tight', dpi=300)
+#plt.savefig(figfile2, bbox_inches='tight', dpi=300)
 plt.show(block=False)
 
 
@@ -271,8 +281,8 @@ plt.semilogy(f_dblside_[int(len(pxx_dblside_)/2):,-(hmode+3)], \
 plt.grid()
 
 
-plt.savefig(figfile_psd, bbox_inches='tight', format='png', dpi=300)
+#plt.savefig(figfile_psd, bbox_inches='tight', format='png', dpi=300)
 plt.show(block=False)
-
+'''
 
  

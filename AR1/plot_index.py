@@ -14,7 +14,9 @@ from scipy import signal
 from scipy import stats
 import pandas as pd
 import csv
-from matplotlib import pyplot as plt
+import matplotlib as mpl
+mpl.use('TkAgg')  # or whatever other backend that you want
+import matplotlib.pyplot as plt
 
 # useful numbres
 MinYear = 1982
@@ -22,22 +24,51 @@ MaxYear = 2016
 NumYears = MaxYear-MinYear+1
 
 ## Load the selected leading mode
-figfile = '/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/corr_coef_1degAus_trend_PC8.png'
-fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
-tim_vec = xr.open_dataset(fname)['time'] 
+figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/corr_coef_1degAus_trend_PC1_RC1_daily.png'
+#fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
+'''
+# when using monthly data
+fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_YearlyOnMonthly.nc'
+mode = 1
+RCmode = 1
+var_PC = xr.open_dataset(fname)['RC_allPCs'][RCmode-1,:,mode-1]
+'''
+# when using daily data
+fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_Daily.nc'
+tim = pd.date_range('1982-01-01','2016-12-31',name='time',freq='D')
+# remove the last day of the year when leap year
+# Need a function!!!....
+tim = tim[tim !='1984-12-31']
+tim = tim[tim !='1988-12-31']
+tim = tim[tim !='1992-12-31']
+tim = tim[tim !='1996-12-31']
+tim = tim[tim !='2000-12-31']
+tim = tim[tim !='2004-12-31']
+tim = tim[tim !='2008-12-31']
+tim = tim[tim !='2012-12-31']
+tim = tim[tim !='2016-12-31']
+#################################
+# which mode to compare with
+#################################
+mode = 1
+RCmode = 1
+# correct the time vector to appky the monthly mean
+RC_allPCs = xr.Dataset({'RC_allPCs':(('time'),xr.open_dataset(fname) \
+                                              ['RC_allPCs'][RCmode-1,:,mode-1])}, \
+                       coords = {'time':tim})
 #data = np.load(fname + '.npz')
 #PC = data['PC'].item()
+#print(mode)
+var_PC = RC_allPCs['RC_allPCs'].resample(time='1MS').mean('time') 
+# ['PCs'][-mode,:] #PC['PC1_pred'].copy()
 
-# which mode to compare with
-mode = 8
-print(mode)
-var_PC = xr.open_dataset(fname)['PCs'][-mode,:] #PC['PC1_pred'].copy()
-
+##########################
 ## CLIMATE MODE
+###########################
 # read MEI index (ENSO)
 # file_enso is a file with 67 (axis=0) years (starting in 1950) and 
 # 12 moonths + 1 year label columns (13, axis=1) 
-file_mei = np.genfromtxt('../../data/index/enso/MEI_index.txt', \
+file_mei = np.genfromtxt('/v_Munk_Drive/data/index/enso/MEI_index.txt', \
                          skip_header=10, skip_footer = 30, delimiter='\t')
 str_mei = np.nonzero((file_mei[:,0]>(MinYear-1)) \
                      & (file_mei[:,0]<(MinYear+1)))
@@ -52,9 +83,9 @@ mei_monthly_std = (mei_monthly-np.nanmean(mei_monthly)) \
                   /np.nanstd(mei_monthly)
 mei_monthly = signal.detrend(mei_monthly)
 #NINO34
-file_nino34 = np.genfromtxt('../../data/index/enso/nino34.txt', \
+file_nino34 = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino34.txt', \
                             skip_header=1, skip_footer = 6)
-file_nino34_a = np.genfromtxt('../../data/index/enso/nino34_anomaly.txt', \
+file_nino34_a = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino34_anomaly.txt', \
                               skip_header=1, skip_footer = 7)
 
 str_nino34 = np.nonzero((file_nino34[:,0]>(MinYear-1)) \
@@ -73,9 +104,9 @@ nino34_monthly = signal.detrend(nino34_monthly)
 nino34_monthly_std = (nino34_monthly-np.nanmean(nino34_monthly)) \
                      /np.nanstd(nino34_monthly)
 # NINO3
-file_nino3 = np.genfromtxt('../../data/index/enso/nino3.txt', \
+file_nino3 = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino3.txt', \
                            skip_header=1, skip_footer = 6)
-file_nino3_a = np.genfromtxt('../../data/index/enso/nino3_anomaly.txt', \
+file_nino3_a = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino3_anomaly.txt', \
                              skip_header=1, skip_footer = 7)
 
 str_nino3 = np.nonzero((file_nino3[:,0]>(MinYear-1)) \
@@ -95,9 +126,9 @@ nino3_monthly_std = (nino3_monthly-np.nanmean(nino3_monthly)) \
                     /np.nanstd(nino3_monthly)
 
 # NINO4
-file_nino4 = np.genfromtxt('../../data/index/enso/nino4.txt', \
+file_nino4 = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino4.txt', \
                            skip_header=1, skip_footer = 6)
-file_nino4_a = np.genfromtxt('../../data/index/enso/nino4_anomaly.txt', \
+file_nino4_a = np.genfromtxt('/v_Munk_Drive/data/index/enso/nino4_anomaly.txt', \
                              skip_header=1, skip_footer = 7)
 
 str_nino4 = np.nonzero((file_nino4[:,0]>(MinYear-1)) \
@@ -117,7 +148,7 @@ nino4_monthly_std = (nino4_monthly-np.nanmean(nino4_monthly)) \
                     /np.nanstd(nino4_monthly)
 
 # IOD (DMI index)
-file_dmi = np.genfromtxt('../../data/index/DMI_IOD.txt', \
+file_dmi = np.genfromtxt('/v_Munk_Drive/data/index/DMI_IOD.txt', \
                          skip_header=1, skip_footer = 4)
 
 str_dmi = np.nonzero((file_dmi[:,0]>(MinYear-1)) \
@@ -134,7 +165,7 @@ dmi_monthly = signal.detrend(dmi_monthly)
 dmi_monthly_std = (dmi_monthly-np.nanmean(dmi_monthly)) \
                   /np.nanstd(dmi_monthly)
 # SAM
-file_sam = np.genfromtxt('../../data/index/sam/marshall2003.txt', \
+file_sam = np.genfromtxt('/v_Munk_Drive/data/index/sam/marshall2003.txt', \
                          skip_header=2, skip_footer = 3)
 
 str_sam = np.nonzero((file_sam[:,0]>(MinYear-1)) \
@@ -153,21 +184,21 @@ sam_monthly_std = (sam_monthly-np.nanmean(sam_monthly)) \
 
 #subtropical ridge tasmanian high
 # data from 1982-2012 in the following file
-data_strh = np.load('../../data/strh_index.npz')
+data_strh = np.load('/v_Munk_Drive/ecougnon/data/strh_index.npz')
 strh_monthly = data_strh['strh']
 strh_lim = len(strh_monthly)
 
 # blocking index centred at 140E
-data_bi_140 = np.load('../../data/blocking_index_140.npz')
+data_bi_140 = np.load('/v_Munk_Drive/ecougnon/data/blocking_index_140.npz')
 bi_140_monthly = data_bi_140['BI_140']
 bi_140_monthly = signal.detrend(bi_140_monthly)
 # blocking index centred at 160E
-data_bi_160 = np.load('../../data/blocking_index_160.npz')
+data_bi_160 = np.load('/v_Munk_Drive/ecougnon/data/blocking_index_160.npz')
 bi_160_monthly = data_bi_160['BI_160']
 bi_160_monthly = signal.detrend(bi_160_monthly)
 
 # Ningaloo nino index
-data_NingN = np.load('../../data/NingalooNino_index.npz')
+data_NingN = np.load('/v_Munk_Drive/ecougnon/data/NingalooNino_index.npz')
 ning_monthly = data_NingN['NingN_Ind']
 ning_monthly = signal.detrend(ning_monthly)
 
@@ -183,7 +214,7 @@ eac_monthly = signal.detrend(eac_monthly)
 
 # EAC transport -- BRAN from Zeya's analysis
 # 1994-2016 (Aug)
-df = pd.read_csv('../../data/transport_y.csv', header=None)
+df = pd.read_csv('/v_Munk_Drive/ecougnon/data/transport_y.csv', header=None)
 eac_monthly = (df.iloc[:,0])*110000*np.cos((np.pi/180)*37)*0.1*10**(-6)
 eac_monthly = signal.detrend(eac_monthly)
 eac_str = int(12*12)

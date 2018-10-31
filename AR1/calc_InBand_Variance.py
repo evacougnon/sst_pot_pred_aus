@@ -23,6 +23,8 @@ sys.path.insert(0,'../libraries/')
 import eac_useful as eac
 import eric_oliver as eo
 
+import matplotlib as mpl
+mpl.use('TkAgg')  # or whatever other backend that you want
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -95,7 +97,8 @@ elif WHICH == 'HadISST':
         dsst[:,i] = np.squeeze(tmp_dsea[:,0])
     SSTa_TMm = dsst.reshape(len(tim),Y,X)
 
-figfile ='/home/ecougnon/Desktop/WorkingFigures/InBandVariance/InBandVar_SmoothPeriodogram_NoScaling_1-3-7-10.png'
+figfile ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.png'
+figfile_ ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
 
 '''
 # testing at 1 location
@@ -209,18 +212,18 @@ max_10 = np.nanmax(InBand10_p)
 min_all = 0 #np.nanmin(InBand_all_p)
 max_all = np.nanmax(InBand_all_p)
 # normalised by the total variance
-InBand0_p_norm = 100 * ((InBand0_p - min_all)/ \
-                       (max_all-min_all))
-InBand1_p_norm = 100 * ((InBand1_p - min_all)/ \
-                       (max_all-min_all))
+InBand0_p_norm = 100 * (InBand0_p/InBand_all_p)
+#((InBand0_p - min_all)/(max_all-min_all))
+InBand1_p_norm = 100 * (InBand1_p/InBand_all_p)
+#((InBand1_p - min_all)/ \(max_all-min_all))
 #InBand2_p_norm = 100 * ((InBand2_p - min_all)/ \
 #                       (max_all-min_all))
-InBand4_p_norm = 100 * ((InBand4_p - min_all)/ \
-                       (max_all-min_all))
-InBand7_p_norm = 100 * ((InBand7_p - min_all)/ \
-                       (max_all-min_all))
-InBand10_p_norm = 100 * ((InBand10_p - min_all)/ \
-                       (max_all-min_all))
+InBand4_p_norm = 100 * (InBand4_p/InBand_all_p)
+#((InBand4_p - min_all)/ \(max_all-min_all))
+InBand7_p_norm = 100 * (InBand7_p/InBand_all_p)
+#((InBand7_p - min_all)/ \(max_all-min_all))
+InBand10_p_norm = 100 * (InBand10_p/InBand_all_p)
+#((InBand10_p - min_all)/ \(max_all-min_all))
 # normalised by its own min/max
 InBand0_p_norm_ = 100 * ((InBand0_p - min_0)/ \
                        (max_0-min_0))
@@ -242,12 +245,20 @@ InBand10_p_norm_ = 100 * ((InBand10_p - min_10)/ \
 levs=np.arange(0,100+10,10)
 
 plt.figure(figsize=(17,8))
-plt.subplot(2,3,2)
-plt.contourf(InBand1_p, cmap=plt.cm.viridis)
+ax1=plt.subplot(2,3,3,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand1_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand1_p_norm_,levels=levs, cmap=plt.cm.viridis)
-#plt.contourf(InBand1_p_norm,levels=np.arange(np.nanmin(InBand1_p_norm),np.nanmax(InBand1_p_norm)), cmap=plt.cm.viridis)
-#plt.gca().invert_yaxis()
-plt.colorbar()
+plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(np.nanmin(InBand1_p_norm), \
+             np.nanmax(InBand1_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.gca().invert_yaxis() # to use with HAdISST dataset
+plt.colorbar(shrink=0.7)
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('1-3yrs; ' + str(max(0,round(np.nanmin(InBand1_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand1_p_norm),1)) +' %')
 '''
@@ -260,45 +271,94 @@ plt.colorbar()
 plt.title('2-4yrs; ' + str(max(0,round(np.nanmin(InBand2_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand2_p_norm),1)) +' %')
 '''
-plt.subplot(2,3,4)
-plt.contourf(InBand4_p, cmap=plt.cm.viridis)
+ax1=plt.subplot(2,3,4,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand4_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand4_p_norm_,levels=levs, cmap=plt.cm.viridis)
-#plt.contourf(InBand4_p_norm,levels=np.arange(np.nanmin(InBand4_p_norm),np.nanmax(InBand4_p_norm)), cmap=plt.cm.viridis)
+plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(np.nanmin(InBand4_p_norm), \
+             np.nanmax(InBand4_p_norm)), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar()
+plt.colorbar(shrink=0.7)
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('3-7yrs; ' + str(max(0,round(np.nanmin(InBand4_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand4_p_norm),1)) +' %')
 
-plt.subplot(2,3,5)
-plt.contourf(InBand7_p, cmap=plt.cm.viridis)
+ax1=plt.subplot(2,3,5,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand7_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand7_p_norm_,levels=levs, cmap=plt.cm.viridis)
-#plt.contourf(InBand7_p_norm,levels=np.arange(np.nanmin(InBand7_p_norm),np.nanmax(InBand7_p_norm)), cmap=plt.cm.viridis)
+plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(np.nanmin(InBand7_p_norm), \
+             np.nanmax(InBand7_p_norm)), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar()
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
+plt.colorbar(shrink=0.7)
 plt.title('7-10yrs; ' + str(max(0,round(np.nanmin(InBand7_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand7_p_norm),1)) +' %')
 
-plt.subplot(2,3,1)
-plt.contourf(InBand0_p, cmap=plt.cm.viridis)
+ax1=plt.subplot(2,3,2,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand0_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand0_p_norm_,levels=levs, cmap=plt.cm.viridis)
-#plt.contourf(InBand0_p_norm,levels=np.arange(np.nanmin(InBand0_p_norm),np.nanmax(InBand0_p_norm)), cmap=plt.cm.viridis)
+plt.contourf(lon, lat, InBand0_p_norm,levels=np.arange(np.nanmin(InBand0_p_norm), \
+             np.nanmax(InBand0_p_norm)), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar()
+plt.colorbar(shrink=0.7)
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('<1yrs; ' + str(max(0,round(np.nanmin(InBand0_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand0_p_norm),1)) +' %')
 
-plt.subplot(2,3,6)
-plt.contourf(InBand10_p, cmap=plt.cm.viridis)
+ax1=plt.subplot(2,3,6,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand10_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand10_p_norm_,levels=levs, cmap=plt.cm.viridis)
-#plt.contourf(InBand10_p_norm,levels=np.arange(np.nanmin(InBand10_p_norm),np.nanmax(InBand10_p_norm)), cmap=plt.cm.viridis)
+plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(np.nanmin(InBand10_p_norm), \
+             np.nanmax(InBand10_p_norm)), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar()
+plt.colorbar(shrink=0.7)
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('>10yrs; ' + str(max(0,round(np.nanmin(InBand10_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand10_p_norm),1)) +' %')
 
+ax1=plt.subplot(2,3,1,projection=ccrs.PlateCarree())
+ax1.add_feature(cfeature.LAND)
+ax1.coastlines('50m', linewidth=0.8)
+ax1.gridlines()
+#plt.contourf(InBand10_p, cmap=plt.cm.viridis)
+#plt.contourf(InBand10_p_norm_,levels=levs, cmap=plt.cm.viridis)
+plt.contourf(lon, lat, InBand_all_p,levels=np.arange(0, 1.2, 0.1), \
+             cmap=plt.cm.afmhot_r)
+#plt.gca().invert_yaxis()
+plt.colorbar(shrink=0.7)
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
+plt.title('Total Variance')
+
 plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+plt.savefig(figfile_, bbox_inches='tight', format='eps', dpi=300)
 
-
+'''
 plt.figure()
 #plt.plot(f_per[:,92,97],pxx_per[:,92,97])
 #plt.plot(f_pwe[:,92,97],pxx_pwe[:,92,97])
@@ -322,6 +382,7 @@ plt.ylim([0,14])
 plt.xlim([-0.5,0.5])
 plt.title('lat: -48, lon: 150; with 10, 7, 4, 2, 1yr and 6 months marks')
 plt.grid()
+'''
 
 plt.show(block=False)
 
