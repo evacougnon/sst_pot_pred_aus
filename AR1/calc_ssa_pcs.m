@@ -34,8 +34,14 @@ figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/'
 
 
 % EOF on the unfiltered (daily) SSTa and (1/4)x(1/4) deg resolution grid
+%{
 fname_pc = '/v_Munk_Drive/ecougnon/scripts/cdo_tool/PCs_daily_trend_1deg.nc'
 M=360 % dimension of the desired embedding (window length)
+time = ncread(fname_pc,'time');
+%}
+
+fname_pc = '/v_Munk_Drive/ecougnon/scripts/cdo_tool/yearly/PCs_YearlyOnMonthly_trend_NoWeight.nc'
+M=12 % dimension of the desired embedding (window length)
 time = ncread(fname_pc,'time');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,20 +94,18 @@ PCs_all(mode,:,:) = PC(:,1:3);
 Lambda_all(mode,:) = LAMBDA_var;
 
 end
-nccreate([figfile 'All_SSA_RCs_Daily.nc'],'RC_allPCs', ...
-         'Dimension',{'modes',8,'time',N,'slow_RC',3},'Format','netcdf4');
-nccreate([figfile 'All_SSA_RCs_Daily.nc'],'PCs_all', ...
-         'Dimension',{'modes',8,'time',N,'slow_RC',3},'Format','netcdf4');
-nccreate([figfile 'All_SSA_RCs_Daily.nc'],'Var_expl', ...
-         'Dimension',{'modes',8,'Components',M},'Format','netcdf4');
-ncwrite([figfile 'All_SSA_RCs_Daily.nc'],'RC_allPCs',RC_allPCs);
-ncwrite([figfile 'All_SSA_RCs_Daily.nc'],'PCs_all',PCs_all);
-ncwrite([figfile 'All_SSA_RCs_Daily.nc'],'Var_expl',Lambda_all);
-
-
-
-
 %{
+nccreate([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'],'RC_allPCs', ...
+         'Dimension',{'modes',8,'time',N,'slow_RC',3},'Format','netcdf4');
+nccreate([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'],'PCs_all', ...
+         'Dimension',{'modes',8,'time',N,'slow_RC',3},'Format','netcdf4');
+nccreate([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc.nc'],'Var_expl', ...
+         'Dimension',{'modes',8,'Components',M},'Format','netcdf4');
+ncwrite([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'],'RC_allPCs',RC_allPCs);
+ncwrite([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'],'PCs_all',PCs_all);
+ncwrite([figfile 'All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'],'Var_expl',Lambda_all);
+%}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plotting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -109,13 +113,17 @@ maxwidth=1300;
 maxheight=600;
 C = linspecer(8);
 
+for mode=1:8
+
+eof_pcs = ncread(fname_pc,'SSTa',[mode,1],[1,Inf]);
+
 fig=figure('Position',[1 1 maxwidth maxheight-300]),
 set(gcf,'name','Variance explained -- eigenvalues')
-plot(LAMBDA_var,'o-');
-title(['Variance explained for each mode, with mode1: ' num2str(LAMBDA_var(1)) ' ;mode2: ' num2str(LAMBDA_var(2)) ' ;mode3: ' num2str(LAMBDA_var(3)) ''] )
+plot(Lambda_all(mode,:),'o-');
+title(['Variance explained for each mode, with mode1: ' num2str(Lambda_all(mode,1)) ' ;mode2: ' num2str(Lambda_all(mode,2)) ' ;mode3: ' num2str(Lambda_all(mode,3)) ''] )
 xlim([0,15]);
 grid
-export_fig([figfile 'Var_explained_Daily_PC' num2str(hmode) ''],'-eps','-transparent','-painters')
+export_fig([figfile 'Var_explained_Daily_PC' num2str(mode) ''],'-eps','-transparent','-painters')
 
 fig=figure('Position',[1 1 maxwidth maxheight]),
 set(gcf,'name','Original time series and 3 least oscillating RC')
@@ -123,19 +131,20 @@ clf;
 subplot(2,1,1)
 plot(t,eof_pcs,'k-','LineWidth',2);
 hold on,
-plot(t,RC(:,1),'-','Color',C(1,:),'LineWidth',2);
-plot(t,RC(:,2),'-','Color',C(2,:),'LineWidth',2);
-plot(t,RC(:,3),'-','Color',C(4,:),'LineWidth',2);
+plot(t,RC_allPCs(mode,:,1),'-','Color',C(1,:),'LineWidth',2);
+plot(t,RC_allPCs(mode,:,2),'-','Color',C(2,:),'LineWidth',2);
+plot(t,RC_allPCs(mode,:,3),'-','Color',C(4,:),'LineWidth',2);
 legend('Original','RC1','RC2','RC3','Location','SouthEast');
 title('Original time series and 3 least oscillating RCs');
 subplot(2,1,2)
 plot(t,eof_pcs,'-k','LineWidth',2);
 hold on,
-plot(t,sum(RC(:,1:3),2),'r-','LineWidth',2);
+plot(t,sum(RC_allPCs(mode,:,1:3),3),'r-','LineWidth',2);
 legend('Original','Reconstruction with RCs 1-3','Location','SouthEast');
 title('Original time series with the sum of 3 least oscillating RCs');
-export_fig([figfile 'RC1-3_Original_Daily_PC' num2str(hmode) ''],'-eps','-transparent','-painters')
-%}
+export_fig([figfile 'RC1-3__PCrlyOnMonthly_NoWeight' num2str(mode) ''],'-eps','-transparent','-painters')
+
+end
 
 %{
 figure(3);

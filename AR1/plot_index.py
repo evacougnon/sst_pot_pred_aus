@@ -24,13 +24,13 @@ MaxYear = 2016
 NumYears = MaxYear-MinYear+1
 
 ## Load the selected leading mode
-figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/corr_coef_1degAus_trend_PC1_RC1_daily.png'
+figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/corr_coef_1degAus_trend_PC2_RC3_yearly_NoWeight.png'
 #fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
-'''
+
 # when using monthly data
-fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_YearlyOnMonthly.nc'
-mode = 1
-RCmode = 1
+fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'
+mode = 2
+RCmode = 3
 var_PC = xr.open_dataset(fname)['RC_allPCs'][RCmode-1,:,mode-1]
 '''
 # when using daily data
@@ -61,6 +61,7 @@ RC_allPCs = xr.Dataset({'RC_allPCs':(('time'),xr.open_dataset(fname) \
 #print(mode)
 var_PC = RC_allPCs['RC_allPCs'].resample(time='1MS').mean('time') 
 # ['PCs'][-mode,:] #PC['PC1_pred'].copy()
+'''
 
 ##########################
 ## CLIMATE MODE
