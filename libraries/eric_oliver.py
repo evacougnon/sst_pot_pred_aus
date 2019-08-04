@@ -1,6 +1,7 @@
 '''
    functions from Eric Oliver
-
+   https://ecjoliver.weebly.com/
+   https://ecjoliver.weebly.com/code.html
 
 '''
 
@@ -144,6 +145,10 @@ def deseason_harmonic_2D(dat, K, L, detrend=False):
 # and define the area dA as dx*dy.
 #
 # From Eric Olibve (check email 19 Mar 2018)
+#
+# prefer mine! as it uses geodistance
+# therefor refers to a geoide!
+# check eac_useful.py
 ########################################
 
 def latlon2km(lon1, lat1, lon2, lat2):
