@@ -27,16 +27,17 @@ import xarray as xr
 import time as time
 
 import sys
-sys.path.insert(0,'../libraries/')
+sys.path.insert(0,'/v_Munk_Drive/ecougnon/scripts/libraries/')
 import eric_oliver as eo
+import eac_useful as eac
 
 # load useful information
 # useful numbers
-# tau -- number of months per chunk
-tau = 365 #12 
+# tau -- number of months (or days) per chunk
+tau = 30 #365 #12 
 # days -- lengths of the chunk
-outfile = '/home/ecougnon/ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
-fname = '../../PotPred/SSTa_daily_Aus.nc'
+outfile = '/v_Munk_Drive/ecougnon/ana/PotPred/PP_SSTa_daily_1month_vSZ_Aus_trend.nc'
+fname = '/v_Munk_Drive/ecougnon/ana/SSTa_daily_Aus.nc'
 #SSTa_monthly_extremes_Aus.nc'
 #OTEs_NumDays_month_Aus_19822016.nc'
 #fname = '/home/ecougnon/data/HadISST_sst.nc'
@@ -57,6 +58,9 @@ lon = xr.open_dataset(fname)['lon']
 #lon = lon.sel(lon=slice(lon_min,lon_max,lon_bin))
 #tim = xr.open_dataset(fname)['time']
 #tim = tim.sel(time=slice('1871-01-01','2016-01-01'))
+######################################################
+# when using tau=365days:
+'''
 tim = pd.date_range('1982-01-01','2016-12-31')
 # remove the last day of the year when leap year
 # Need a function!!!....
@@ -69,18 +73,31 @@ tim = tim[tim !='2004-12-31']
 tim = tim[tim !='2008-12-31']
 tim = tim[tim !='2012-12-31']
 tim = tim[tim !='2016-12-31']
+'''
+#######################################################
+#######################################################
+# when using tau=30 days: (426months of 30 years, while 
+# there is 420 months in 35 years!) BUT need consecutive obs within a chunk
+# and same size chunks
+tim = pd.date_range('1982-01-01','2016-12-27')
+NumMonths = int(len(tim)/tau)
+NumDays = len(tim)
+######################################################
 SST = xr.open_dataset(fname)['SSTa']
 SST = SST.sel(time=tim, lat=lat, lon=lon)
+SST = SST.transpose('time','lat','lon')
 T_keys = ['SSTa']
+'''
 # time period
 MinYear = 1982 #1870 #1982
 MaxYear = 2016 # 2016
 NumYears = MaxYear - MinYear+1
 NumMonths = NumYears*tau
+'''
 # define the start/end indexes for each chunk
-str_id = range(0,NumMonths,tau)
-end_id = range(tau-1,NumMonths+1,tau)
-NumChunk = len(str_id)
+str_id = range(0,NumDays,tau)
+end_id = range(tau-1,NumDays+1,tau)
+NumChunk = len(str_id) #=NumMonth when tau=30
 
 # allocate memory
 #PP_keys = ['Var_interC','Var_noise','Var_slow','p']
@@ -128,8 +145,9 @@ if check==1: # do anomalies (deseasonned and detrended)
 #PP[key][:,:,:] = np.apply_along_axis(eac.PotPred_ZhengFred,0, SST[:,:,:],tau, \
 #                                     NumChunk, str_id,end_id)
 
+print('starting the ppr calc')
 # apply PotPred_vStorchZwiers function on a single time series
-PP[key][:,:,:] = np.apply_along_axis(eac.PotPred_vStorchZwiers,0, \
+PP['TMM'][:,:,:] = np.apply_along_axis(eac.PotPred_vStorchZwiers,0, \
                                      SST[:,:,:],tau, \
                                      NumChunk, str_id,end_id)
 

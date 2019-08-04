@@ -16,20 +16,32 @@ F_O_DIR=/v_Munk_Drive/ecougnon/scripts/cdo_tool/
 F_D_DIR=/v_Munk_Drive/ecougnon/ana
 
 # extract to get a 1x1 deg grid (instead of 1/4)
-ncecat -F -d lat,1,,4 -d lon,1,,4 -v sst /v_Munk_Drive/ecougnon/ana/SSTa_daily_trend_Aus.nc out_test.nc
+#ncks -F -d lat,1,,4 -d lon,1,,4 ${F_D_DIR}/SSTa_daily_trend_Aus.nc SSTa_daily_trend_Aus_1deg.nc
+
+date
+
+# eofcoeff calculates a non weighted dot product of the fields in 
+# infile1 and infile2. For consistency set the environment variable 
+# CDO_WEIGHT_MODE=off when using eof or eof3d
+export CDO_WEIGHT_MODE=off
  
 # calc eigen-values and -vectors
-cdo eoftime,12 ${F_D_DIR}/SSTa_daily_trend_Aus.nc eigval.nc eigvect.nc
+cdo eoftime,12 SSTa_daily_trend_Aus_1deg.nc eigval_daily_1deg_NoWeight.nc eigvect_daily_1deg_NoWeight.nc
+date
 # calc PCs
-cdo eofcoeff eigvect.nc ${F_D_DIR}/SSTa_daily_trend_Aus.nc principalCoef.nc 
+cdo eofcoeff eigvect_daily_1deg_NoWeight.nc SSTa_daily_trend_Aus_1deg.nc principalCoef_NoWeight_
 
+date
 # concatanate the PCs along a new dimension -- modes
-cdo merge principlaCoef.nc000??.nc PCs_tmp.nc
+cdo merge principalCoef_NoWeight_000??.nc PCs_tmp0.nc
+#ncecat principalCoef.nc000??.nc -O PCs_ncomerge.nc
+#ncrename -d record,modes PCs_ncomerge.nc
 ncrename -d sfc,modes PCs_tmp0.nc
 # remove the lat lon dimension, useless here
 ncwa -a lat PCs_tmp0.nc PCs_tmp1.nc
 ncwa -a lon PCs_tmp1.nc PCs_tmp2.nc
 
-mv PCs_tmp.nc ${F_O_DIR}/PCs.nc
-rm principalCoef.nc000??.nc
+date
+mv PCs_tmp2.nc ${F_O_DIR}/PCs_daily_trend_1deg_NoWeight.nc
+rm principalCoef_NoWeight_000??.nc PCs_tmp?.nc
 

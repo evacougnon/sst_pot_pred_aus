@@ -25,15 +25,14 @@ import scipy.stats.mstats as st # highly similar to scipy.stats
                                 # but adapted for masked arrays
 from scipy.stats import pearsonr
 
-from matplotlib import pyplot as plt
-import matplotlib
-import mpl_toolkits.basemap as bm
+import matplotlib as mpl
+mpl.use('TkAgg')  # or whatever other backend that you want
+import matplotlib.pyplot as plt
 import cmocean
 
 import sys
-sys.path.insert(0,'/home/ecougnon/scripts/libraries/')
+sys.path.insert(0,'../libraries/')
 import eric_oliver as eo
-import marineHeatWaves as mhw
 import eac_useful as eac
 
 #figfile ='/home/ecougnon/ana/MHW_paper_SarahKirkpatrick/SSTa_mhw_west_tas.png'
@@ -71,17 +70,17 @@ info on the regions:
                 lat[-15:-5]; lon[95:105]E 
 
 '''
-lat_min = -30 # deg N
-lat_max = -20
-lon_min = 105 - 360  # deg E with the adjtment for the model
-lon_max = 115 - 360 
+lat_min = -45 # deg N
+lat_max = -35
+lon_min = 150 - 360  # deg E with the adjtment for the model
+lon_max = 160 - 360 
 
 ################################
 # load the model data and 
 # area-avearged them
 ################################
-header = '/home/ecougnon/data/DPS/forecast/'
-header_reana = '/home/ecougnon/data/DPS/reanalysis/ETKF/'
+header = '/v_Munk_Drive//ecougnon/data/DPS/forecast/'
+header_reana = '/v_Munk_Drive/ecougnon/data/DPS/reanalysis/enkf-9/'
 gname = header + 'RAW/ocean_daily_2002_01_01.nc'
 area = xr.open_dataset(gname)['area_t'].sel(yt_ocean=slice(lat_min,lat_max), \
                                             xt_ocean=slice(lon_min,lon_max))
@@ -202,7 +201,7 @@ sst_spread = ((sst_spread*np.array(weight)).sum(dim=('yaxis_1','xaxis_1')))
 # SSTa: ['SSTa'] 
 ############################################
 #fname_obs = '/home/ecougnon/ana/SST_smooth_1deg_Aus.nc'
-fname_obs = '/home/ecougnon/ana/SSTa_daily_filter_Aus_20032017.nc'
+fname_obs = '/v_Munk_Drive/ecougnon/ana/SSTa_daily_filter_Aus_20032017.nc'
 ds = xr.open_dataset(fname_obs)['SSTa']. \
         sel(lat=slice(lat_min,lat_max,4), \
             lon=slice(lon_min+360,lon_max+360,4), \
@@ -234,45 +233,29 @@ ds_oisst = ((ds*weight).sum(dim=('lon','lat'))) / tot_weight
 
 #ds_oisstI = ds.mean(dim=('lat','lon'))
 
-'''
-####################################
-## apply the MHW code
-####################################
-#time vector for the mhw function!!!
-# needs to be generated wth datetime format!
-MinYear = 2007
-MaxYear = 2010 # warninng, so far finishes in Jan!!
-NumYears = MaxYear-MinYear+1
-MaxNumLeapYear = NumYears//4 + 1 # use only the integer (+1 is used in 
-                                     # case the first year is a leap year
-NumDays = 365*NumYears + MaxNumLeapYear
-# WARNING different finish time
-if WHICH == '00':
-    dtime = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,10,25). \
-                                        toordinal()+1)
-# time vector for plotting with mhw
-    tim_vec_plot = pd.date_range('2003-01-01','2010-10-25',name='time',freq='D')
-elif WHICH == 'all':
-    dtime_reana = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,12,31). \
-                                              toordinal()+1)
-    tim_vec_plot_reana = pd.date_range('2007-01-01','2010-12-31',name='time',freq='D')
-
-    dtime_ens = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,10,25). \
-                                            toordinal()+1)
-    tim_ens_plot = pd.date_range('2007-01-01','2010-10-25',name='time',freq='D')
-    dtime_mem = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,11,22). \
-                                            toordinal()+1)
-    tim_mem_plot = pd.date_range('2007-01-01','2010-11-22',name='time',freq='D')
-else:
-    dtime = np.arange(date(MinYear,1,1).toordinal(),date(MaxYear,11,22). \
-                                        toordinal()+1)
-# time vector for plotting with mhw
-    tim_vec_plot = pd.date_range('2003-01-01','2010-11-22',name='time',freq='D')
-    sst_mean_d = np.array(sst_aa)
-if WHICH != 'all':
-    sst_mean_d = np.array(sst_aa)
-    mhws, clim = mhw.detect(dtime, sst_mean_d, climatologyPeriod=[2003,2006])
-'''
+######################################################
+# Read the reconstructed component after applying
+# SSA method on each mode of the daily EOF
+# analysis
+######################################################
+fname_rcs = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_daily_NoWeight.nc'
+mode = 6
+RCmode = 1
+tim = pd.date_range('1982-01-01','2016-12-31',name='time',freq='D')# Need a function!!!....
+tim = tim[tim !='1984-12-31']
+tim = tim[tim !='1988-12-31']
+tim = tim[tim !='1992-12-31']
+tim = tim[tim !='1996-12-31']
+tim = tim[tim !='2000-12-31']
+tim = tim[tim !='2004-12-31']
+tim = tim[tim !='2008-12-31']
+tim = tim[tim !='2012-12-31']
+tim = tim[tim !='2016-12-31']
+RC_tmp = xr.open_dataset(fname_rcs)['RC_allPCs'][RCmode-1:2,:,mode-1]
+RC_tmp = np.sum(RC_tmp,axis=0)
+RC_allPCs = xr.Dataset({'RC_allPCs':(('time'),RC_tmp)}, \
+                       coords = {'time':tim})
+RC_allPCs = RC_allPCs.sel(time=slice('2003-01-01','2016-12-31'))
 
 ####################################
 # offset correction for the bias
@@ -298,10 +281,12 @@ if WHICH != 'all':
 #    plt.axhline(y=np.nanpercentile(ds_oisst,90), color='k', \
 #                linestyle=':', linewidth=1)
     ax.plot(sst_reana.time, sst_reana, 'C1', label= 'reanalysis ensemble mean', alpha=.7)
-    ax.plot(sst_ens.time, sst_ens, '--C1', linewidth=3,
-            label= 'forecast simulation ensemble mean') # (bias corrected)')
-#    ax.plot(sst_ens.time, sst_ens_d + np.array(offset), '--C3', linewidth=2,
-#            label= 'forecast simulation ensemble mean (bias corrected)')
+#    ax.plot(sst_ens.time, sst_ens, '--C1', linewidth=3,
+#            label= 'forecast simulation ensemble mean') # (bias corrected)')
+    ax.plot(RC_allPCs.time, RC_allPCs['RC_allPCs']*2,'C2', label= 'PC' + str(mode) + \
+            '-RC1-2') #' + str(RCmode) +'')
+    ax.plot(sst_ens.time, sst_ens_d + np.array(offset), '--C3', linewidth=2,
+            label= 'forecast simulation ensemble mean (bias corrected)')
 
 #    plt.axhline(y=np.nanpercentile(sst_reana,10), color='C1', \
 #                linestyle=':', linewidth=1)
@@ -319,7 +304,7 @@ if WHICH != 'all':
     plt.plot(tim_vec_plot, clim['thresh'],'b')
     plt.legend(['climatology','SST daily','threshold'])
     '''
-    ax.set_xlim(['2003-01-01','2017-12-31'])
+    ax.set_xlim(['2007-01-01','2010-12-31'])
 #    ax.set_ylim([18, 28])
     ax.set_ylim([-2.5,2.5])
 #ax.fill_between(tim_vec_plot, sst_mean_d, \
@@ -327,8 +312,9 @@ if WHICH != 'all':
 #                facecolor='red', alpha=0.5, \
 #               interpoate=True)
     ax.legend(loc=4)
-    plt.title('SSTa WA coast (30-20S; 105-115E)', fontsize=16)
-#    plt.grid()
+    plt.title('SSTa (' + str(-lat_min) + '-' + str(-lat_max) + 'S;' + \
+               str(lon_min+360) + '-' + str(lon_max+360) + 'E)', fontsize=16)
+    plt.grid()
 
     '''
     ax = plt.subplot(212)
@@ -386,12 +372,12 @@ elif WHICH == 'all':
     ax.set_xlim(['2007-01-01','2010-12-31'])
     plt.grid()
     
-figfile = header + 'plots/SSTa_WA_timeseries_poster_forecast_full.png'
-plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+#figfile = header + 'plots/SSTa_WA_timeseries_poster_forecast_full.png'
+#plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
 
-#plt.show()
+plt.show(block=False)
 
-
+'''
 ###########################################3
 # histogram
 ############################################
@@ -423,5 +409,5 @@ figfile_hist = header + 'plots/SSTa_WA_timeseries_poster_forecast_full_hist.png'
 plt.savefig(figfile_hist,bbox_inches='tight', format='png', dpi=300)
 plt.show()
 
-
+'''
 

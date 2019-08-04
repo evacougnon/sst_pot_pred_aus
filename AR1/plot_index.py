@@ -23,18 +23,25 @@ MinYear = 1982
 MaxYear = 2016
 NumYears = MaxYear-MinYear+1
 
-## Load the selected leading mode
-figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/corr_coef_1degAus_trend_PC2_RC3_yearly_NoWeight.png'
-#fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
-
-# when using monthly data
-fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_YearlyOnMonthly_NoWeight.nc'
-mode = 2
+#################################
+# which mode to compare with
+#################################
+mode = 5 
 RCmode = 3
+
+## Load the selected leading mode
+figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/vSZ/SSA/corr_coef_1degAus_trend_PC' + str(mode) + '_RC' + str(RCmode) + '_daily_NoWeight.png'
+#fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc'
+'''
+# when using monthly data
+fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_daily_NoWeight.nc'
 var_PC = xr.open_dataset(fname)['RC_allPCs'][RCmode-1,:,mode-1]
 '''
+#'
 # when using daily data
-fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_Daily.nc'
+#fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_daily_NoWeight.nc'
+fname = '../../ana/PotPred/vSZ/SSA/All_SSA_RCs_daily_NoWeight_365_Mode5SumPC5-6.nc'
+fname_pc = '/v_Munk_Drive/ecougnon/scripts/cdo_tool/PCs_daily_trend_1deg_NoWeight.nc'
 tim = pd.date_range('1982-01-01','2016-12-31',name='time',freq='D')
 # remove the last day of the year when leap year
 # Need a function!!!....
@@ -47,21 +54,18 @@ tim = tim[tim !='2004-12-31']
 tim = tim[tim !='2008-12-31']
 tim = tim[tim !='2012-12-31']
 tim = tim[tim !='2016-12-31']
-#################################
-# which mode to compare with
-#################################
-mode = 1
-RCmode = 1
 # correct the time vector to appky the monthly mean
 RC_allPCs = xr.Dataset({'RC_allPCs':(('time'),xr.open_dataset(fname) \
-                                              ['RC_allPCs'][RCmode-1,:,mode-1])}, \
+                                              ['RC_allPCs'][RCmode-1,:,mode-1]), \
+                        'eof_pcs':(('time'),xr.open_dataset(fname_pc) \
+                                              ['SSTa'][:,mode-1])}, \
                        coords = {'time':tim})
 #data = np.load(fname + '.npz')
 #PC = data['PC'].item()
 #print(mode)
 var_PC = RC_allPCs['RC_allPCs'].resample(time='1MS').mean('time') 
 # ['PCs'][-mode,:] #PC['PC1_pred'].copy()
-'''
+#'
 
 ##########################
 ## CLIMATE MODE
@@ -182,21 +186,22 @@ sm_monthly = signal.detrend(sam_monthly)
 # standardise the index
 sam_monthly_std = (sam_monthly-np.nanmean(sam_monthly)) \
                    /np.nanstd(sam_monthly)
-
+'''
 #subtropical ridge tasmanian high
 # data from 1982-2012 in the following file
 data_strh = np.load('/v_Munk_Drive/ecougnon/data/strh_index.npz')
 strh_monthly = data_strh['strh']
 strh_lim = len(strh_monthly)
+'''
 
 # blocking index centred at 140E
-data_bi_140 = np.load('/v_Munk_Drive/ecougnon/data/blocking_index_140.npz')
+data_bi_140 = np.load('/v_Munk_Drive/ecougnon/data/BlockIndex/daily/BI_140_daily_ERAi.npz')
 bi_140_monthly = data_bi_140['BI_140']
-bi_140_monthly = signal.detrend(bi_140_monthly)
+#bi_140_monthly = signal.detrend(bi_140_monthly)
 # blocking index centred at 160E
-data_bi_160 = np.load('/v_Munk_Drive/ecougnon/data/blocking_index_160.npz')
+data_bi_160 = np.load('/v_Munk_Drive/ecougnon/data/BlockIndex/daily/BI_160_daily_ERAi.npz')
 bi_160_monthly = data_bi_160['BI_160']
-bi_160_monthly = signal.detrend(bi_160_monthly)
+#bi_160_monthly = signal.detrend(bi_160_monthly)
 
 # Ningaloo nino index
 data_NingN = np.load('/v_Munk_Drive/ecougnon/data/NingalooNino_index.npz')
@@ -243,11 +248,11 @@ corr_dmi_std, p_dmi_std = st.spearmanr(var_PC,dmi_monthly_std)
 corr_sam, p_sam = st.spearmanr(var_PC,sam_monthly)
 corr_sam_std, p_sam_std = st.spearmanr(var_PC,sam_monthly_std)
 
-corr_strh, p_strh = st.spearmanr(var_PC[0:strh_lim],strh_monthly)
+#corr_strh, p_strh = st.spearmanr(var_PC[0:strh_lim],strh_monthly)
 #corr_strh_std, p_strh_std = st.spearmanr(var_PC,strh_monthly_std)
 
-corr_bi_140, p_bi_140 = st.spearmanr(var_PC[0:strh_lim],bi_140_monthly)
-corr_bi_160, p_bi_160 = st.spearmanr(var_PC[0:strh_lim],bi_160_monthly)
+corr_bi_140, p_bi_140 = st.spearmanr(RC_allPCs['eof_pcs'],bi_140_monthly)
+corr_bi_160, p_bi_160 = st.spearmanr(RC_allPCs['eof_pcs'],bi_160_monthly)
 
 corr_ning, p_ning = st.spearmanr(var_PC, ning_monthly)
 
@@ -289,16 +294,16 @@ corr_sam_lead = np.empty(len(range(0,lead_max)))
 corr_sam_lead.fill(np.nan)
 corr_sam_lead[int(lead_max/2)], tmp = st.spearmanr(var_PC, sam_monthly) # zero lead/lag
 
-corr_strh_lead = np.empty(len(range(0,lead_max)))
-corr_strh_lead.fill(np.nan)
-corr_strh_lead[int(lead_max/2)], tmp = st.spearmanr(var_PC[0:strh_lim], strh_monthly) # zero lead/lag
+#corr_strh_lead = np.empty(len(range(0,lead_max)))
+#corr_strh_lead.fill(np.nan)
+#corr_strh_lead[int(lead_max/2)], tmp = st.spearmanr(var_PC[0:strh_lim], strh_monthly) # zero lead/lag
 
 corr_bi_140_lead = np.empty(len(range(0,lead_max)))
 corr_bi_140_lead.fill(np.nan)
-corr_bi_140_lead[int(lead_max/2)],tmp = st.spearmanr(var_PC[0:strh_lim],bi_140_monthly) #zero lead/lag
+corr_bi_140_lead[int(lead_max/2)],tmp = st.spearmanr(RC_allPCs['eof_pcs'],bi_140_monthly) #zero lead/lag
 corr_bi_160_lead = np.empty(len(range(0,lead_max)))
 corr_bi_160_lead.fill(np.nan)
-corr_bi_160_lead[int(lead_max/2)],tmp = st.spearmanr(var_PC[0:strh_lim],bi_160_monthly) #zero lead/lag
+corr_bi_160_lead[int(lead_max/2)],tmp = st.spearmanr(RC_allPCs['eof_pcs'],bi_160_monthly) #zero lead/lag
 
 corr_ning_lead = np.empty(len(range(0,lead_max)))
 corr_ning_lead.fill(np.nan)
@@ -328,12 +333,12 @@ for lag in range(int(lead_max/2)-1,0-1,-1):
                                                nino4_monthly_a[ll:])
     corr_dmi_lead[lag], tmp = st.spearmanr(var_PC[:-ll],dmi_monthly[ll:])
     corr_sam_lead[lag], tmp = st.spearmanr(var_PC[:-ll],sam_monthly[ll:])
-    corr_strh_lead[lag], tmp = st.spearmanr(var_PC[:strh_lim-ll], \
-                                            strh_monthly[ll:])
-    corr_bi_140_lead[lag], tmp = st.spearmanr(var_PC[:strh_lim-ll], \
-                                              bi_140_monthly[ll:])
-    corr_bi_160_lead[lag], tmp = st.spearmanr(var_PC[:strh_lim-ll], \
-                                              bi_160_monthly[ll:])
+#    corr_strh_lead[lag], tmp = st.spearmanr(var_PC[:strh_lim-ll], \
+#                                            strh_monthly[ll:])
+    corr_bi_140_lead[lag], tmp = st.spearmanr(RC_allPCs['eof_pcs'][:-(ll*30)], \
+                                              bi_140_monthly[ll*30:])
+    corr_bi_160_lead[lag], tmp = st.spearmanr(RC_allPCs['eof_pcs'][:-(ll*30)], \
+                                              bi_160_monthly[ll*30:])
     corr_ning_lead[lag], tmp = st.spearmanr(var_PC[:-ll],ning_monthly[ll:])
     corr_eac_lead[lag], tmp = st.spearmanr(var_PC[eac_str:eac_end-ll+1], \
                                            eac_monthly[ll:])
@@ -358,31 +363,31 @@ for lead in range(int(lead_max/2)+1,lead_max):
                                                 nino4_monthly_a[:-ll])
     corr_dmi_lead[lead], tmp = st.spearmanr(var_PC[ll:],dmi_monthly[:-ll])
     corr_sam_lead[lead], tmp = st.spearmanr(var_PC[ll:],sam_monthly[:-ll])
-    corr_strh_lead[lead], tmp = st.spearmanr(var_PC[ll:strh_lim], \
-                                             strh_monthly[:-ll])
-    corr_bi_140_lead[lead], tmp = st.spearmanr(var_PC[ll:strh_lim], \
-                                               bi_140_monthly[:-ll])
-    corr_bi_160_lead[lead], tmp = st.spearmanr(var_PC[ll:strh_lim], \
-                                               bi_160_monthly[:-ll])
+#    corr_strh_lead[lead], tmp = st.spearmanr(var_PC[ll:strh_lim], \
+#                                             strh_monthly[:-ll])
+    corr_bi_140_lead[lead], tmp = st.spearmanr(RC_allPCs['eof_pcs'][ll*30:], \
+                                               bi_140_monthly[:-(ll*30)])
+    corr_bi_160_lead[lead], tmp = st.spearmanr(RC_allPCs['eof_pcs'][ll*30:], \
+                                               bi_160_monthly[:-(ll*30)])
     corr_ning_lead[lead], tmp = st.spearmanr(var_PC[ll:],ning_monthly[:-ll])
     corr_eac_lead[lead], tmp = st.spearmanr(var_PC[eac_str+ll:eac_end+1], \
                                             eac_monthly[:-ll])
 
     ll = ll+1
  
-print('mei: ' + repr(corr_mei) + '' )
+#print('mei: ' + repr(corr_mei) + '' )
 #print('mei std: ' + repr(corr_mei_std) + '')
 
 print('nino34: '+ repr(corr_nino34) +'')
-print('nino34 a: '+ repr(corr_nino34_a) +'')
+#print('nino34 a: '+ repr(corr_nino34_a) +'')
 #print('nino34 std: '+ repr(corr_nino34_std) +'')
 
-print('nino3: '+ repr(corr_nino3) +'')
-print('nino3 a: '+ repr(corr_nino3_a) +'')
+#print('nino3: '+ repr(corr_nino3) +'')
+#print('nino3 a: '+ repr(corr_nino3_a) +'')
 #print('nino3 std: '+ repr(corr_nino3_std) +'')
 
-print('nino4: '+ repr(corr_nino4) +'')
-print('nino4 a: '+ repr(corr_nino4_a) +'')
+#print('nino4: '+ repr(corr_nino4) +'')
+#print('nino4 a: '+ repr(corr_nino4_a) +'')
 #print('nino4 std: '+ repr(corr_nino4_std) +'')
 
 print('dmi: '+ repr(corr_dmi) +'')
@@ -391,14 +396,14 @@ print('dmi: '+ repr(corr_dmi) +'')
 print('sam: '+ repr(corr_sam) +'')
 #print('sam std: '+ repr(corr_sam_std) +'')
 
-print('strh: '+ repr(corr_strh) +'')
+#print('strh: '+ repr(corr_strh) +'')
 
-print('BI at 140E: '+ repr(corr_bi_140) +'')
-print('BI at 160E: '+ repr(corr_bi_160) +'')
+#print('BI at 140E: '+ repr(corr_bi_140) +'')
+#print('BI at 160E: '+ repr(corr_bi_160) +'')
 
 print('Ningaloo Nino: '+ repr(corr_ning) +'')
 
-print('EAC transport: '+ repr(corr_eac) +'')
+#print('EAC transport: '+ repr(corr_eac) +'')
 
 ## significance:
 N = len(var_PC)
@@ -422,9 +427,10 @@ for df in range(1,int(lead_max/2)+1):
 ## ploting the corr coef funcion of  the lead time
 x_axis = np.arange(-24,24+1)
 
+'''
 ax=plt.figure(figsize=(15,6))
 plt.plot(x_axis, corr_mei_lead,'c') #'b')
-plt.plot(x_axis, corr_nino34_lead,'g')
+plt.plot(x_axis, corr_nino34_lead,'*g')
 #plt.plot(x_axis, corr_nino34_a_lead,'g')
 ##plt.plot(x_axis, corr_nino3_lead,'y')
 #plt.plot(x_axis, corr_nino3_a_lead,'y')
@@ -433,13 +439,13 @@ plt.plot(x_axis, corr_nino34_lead,'g')
 plt.plot(x_axis, corr_dmi_lead,'m')
 plt.plot(x_axis, corr_sam_lead,'r')
 #plt.plot(x_axis, corr_strh_lead,'k')
-##plt.plot(corr_bi_140_lead)
-#plt.plot(x_axis, corr_bi_160_lead, color='0.75')
+plt.plot(x_axis, corr_bi_140_lead, color='0.3')
+plt.plot(x_axis, corr_bi_160_lead, color='0.75')
 plt.plot(x_axis, corr_ning_lead,'darkorange')
 plt.plot(x_axis, corr_eac_lead,'k') #'maroon')
 ##plt.legend(['mei','nino34','nino34a','nino3','nino3a','nino4','nino4a', \
 ##            'dmi','sam','strh','BI 160'],loc=4)
-plt.legend(['mei','nino34','dmi','sam', \
+plt.legend(['mei','nino34','dmi','sam','BI140','BI160', \
             'Ningaloo Nino', 'EAC trp'],loc=4)
 #plt.legend(['Multivariate ENSO Index (MEI)','Dipole Mode Index (DMI)', \
 #            'Southern Annular Mode (SAM)','Ningaloo Nino Index (NNI)', \
@@ -455,12 +461,13 @@ plt.ylim([-0.6, 0.6])
 plt.grid()
 plt.tick_params(labelsize=18)
 
-plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+#plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
 
-#plt.show(block=False)
+plt.show(block=False)
 
 ##
-'''
+
+
 # plotting
 plt.figure()
 #plt.plot(enso_monthly)

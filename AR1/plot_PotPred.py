@@ -13,14 +13,17 @@ import xarray as xr
 #from matplotlib import pyplot as plt
 #import matplotlib
 #import mpl_toolkits.basemap as bm
-
+import matplotlib as mpl
+mpl.use('TkAgg')  # or whatever other backend that you want
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 
-fname = '../../ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
-fname_='../../ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
+#fname = '/v_Munk_Drive/ecougnon/ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
+fname = '../tmp_data2plot/PP_SSTa_daily_1yr_vSZ_Aus.nc'
+#PP_SSTa_daily_1yr_vSZ_Aus.nc'
+fname_='../tmp_data2plot/PP_SSTa_daily_1month_vSZ_Aus.nc' #PP_SSTa_monthly_1yr_vSZ_Aus.nc'
 #'../../ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
 #fname = '../../ana/PotPred/PP_SSTa_monthly_1yr_ZFL_Aus.nc'
 #PP_SSTa_trend_monthly_1yr_ZFL_Aus.nc'
@@ -31,14 +34,17 @@ fname_='../../ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
 #fname = '/home/ecougnon/ana/PotPred/PP_HadISST_monthly_5yr_ZFL_global.nc'
 #figfile = '/home/ecougnon/ana/PotPred/PPratio_SSTa_TMM_1yr_ZFL_sign_vSZ.png'
 #PPratio_OTE_p90_1yr_ZFL_Aus.png'
-figfile = '/home/ecougnon/Desktop/WorkingFigures/vSZ/PPR_vSZ_day.png'
+#figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/PPR_vSZ_day_1yr.png'
+figfile = '../tmp_data2plot/PPR_vSZ_day_diff.eps'
 
 # when using a nc file
 lat_map = xr.open_dataset(fname)['lat']
 lon_map = xr.open_dataset(fname)['lon']
 PP = xr.open_dataset(fname)['TMM'] #Pdays_p90'] #TMM']
-PP=PP.transpose('PP_keys','lat','lon')
+PP = PP.transpose('PP_keys','lat','lon')
 PP_ = xr.open_dataset(fname_)['TMM']
+PP2plot = ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]) - ((PP_[0,:,:]- PP_[1,:,:]) / PP_[0,:,:])
+
 '''
 data = np.load(fname+'.npz')
 lon_map = data['lon_map']
@@ -49,7 +55,7 @@ PP2 = data['PP_TMM'].item()
 # plot setting
 '''
 domain = [-55, 90, 10, 180] #[-80, 0, 85, 360] #[-55, 90, 10, 180]
-domain_draw = [-50, 90, 10, 180] #[-80, 0, 85, 360] #[-50, 90, 10, 180]
+datasedatasettdomain_draw = [-50, 90, 10, 180] #[-80, 0, 85, 360] #[-50, 90, 10, 180]
 dlat = 10 #30 #10
 dlon = 30 #90 #30
 llon, llat = np.meshgrid(lon_map, lat_map)
@@ -59,8 +65,6 @@ cont_col = '1.0'
 
 ax=plt.figure(figsize=(10,8)) #12,6)) # (10,8)
 plt.clf()
-#proj = bm.Basemap(projection='cyl', llcrnrlat=domain[0], llcrnrlon=domain[1], \
-#                  urcrnrlat=domain[2], urcrnrlon=domain[3], resolution='i')
 #proj = bm.Basemap(projection='merc', llcrnrlat=domain[0], llcrnrlon=domain[1], \
 #                  urcrnrlat=domain[2], urcrnrlon=domain[3], resolution='i')
 ax = plt.axes(projection=ccrs.PlateCarree())
@@ -75,16 +79,20 @@ ax.gridlines()
 #proj.drawmeridians(range(domain_draw[1],domain_draw[3]+1,dlon), \
 #                   labels=[False,False,False,True], fontsize=14)
 #lonproj, latproj = proj(llon, llat)
+'''
 plt.contourf(lon_map, lat_map, ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]), \
              levels=np.arange(0,1.1,0.1), cmap=plt.cm.afmhot_r, \
              transform=ccrs.PlateCarree())
+'''
+plt.contourf(lon_map, lat_map, PP2plot, \
+             levels=np.arange(-2,2.2,0.2), cmap=plt.cm.RdYlBu_r, \
+             transform=ccrs.PlateCarree())
+
 #plt.contourf(lonproj, latproj, ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]), \
 #levels=np.arange(0,3+0.1,0.1), \
 #                  cmap=plt.cm.afmhot_r)  #Oranges)#YlOrBr)
-#cb=plt.colorbar(ticks=np.arange(0,1+0.1,0.1),shrink=0.9)
-#plt.contourf(lonproj, latproj, PP1['p'] - PP2['p'], levels=np.arange(-0.5,0.5+0.01,0.01), \
-#             cmap=plt.cm.seismic) #BrBG)
-cb=plt.colorbar() #ticks=np.arange(-0.5,0.5+0.01,0.1),shrink=0.9)
+cb=plt.colorbar(ticks=np.arange(-1.8,1.8+0.2,0.4),shrink=0.7) 
+#ticks=np.arange(-0.5,0.5+0.01,0.1),shrink=0.9)
 cb.ax.tick_params(labelsize=14)
 ax.set_xlim([90, 180])
 ax.set_ylim([-55, 10])
@@ -93,12 +101,12 @@ ax.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 #plt.contour(lonproj, latproj, PP[3,:,:], levels=[0.75], colors='0', \
 #            label='0.75 ZFL')
 #plt.contour(lonproj, latproj, (PP[1,:,:]/PP[0,:,:]), levels=[1.46], colors='r')
-#plt.contour(lonproj, latproj, PP_[2,:,:], levels=[PP_[3,0,0]], colors='0.6', \
-#            label='F90 vSZ')
+#plt.contour(lon_map, lat_map, PP[2,:,:], levels=[np.max(PP[3,:,:])], colors='0.6', \
+#            label='F90 vSZ', transform=ccrs.PlateCarree())
 #plt.title('PP ratio - TMM based on ZFL with vSZ ratio (significance based on vSZ in grey)', \
 #          fontsize=16, y=1.08)
-plt.title('PPR from daily SSTA using vSW')
-plt.savefig(figfile,bbox_inches='tight', format='png', dpi=300)
+#plt.title('PPR from daily SSTA using vSZ (365-day chunk size)')
+plt.savefig(figfile,bbox_inches='tight', format='eps', dpi=300)
 plt.show(block=False)
 
 

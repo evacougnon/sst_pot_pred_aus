@@ -26,11 +26,12 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 # Load data
-fname = '../../ana/PotPred/EOF/eof_Aus_daily_trend_1deg_12modes_monthly.nc' 
+fname = '../tmp_data2plot/eof_Aus_daily_1deg_12modes.nc'
+#eof_Aus_daily_trend_1deg_12modes_monthly.nc' 
 #eof_Aus_daily_1deg_12modes.nc'
-fname_ppr = '../../ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
+fname_ppr = '../tmp_data2plot/PP_SSTa_daily_1yr_vSZ_Aus.nc'
 
-figfile ='../../ana/PotPred/vSZ/EOF/EOFmaps_PCsm_1-4modes_SSTatrend.png'
+figfile ='../tmp_data2plot/EOFmaps_1-4modes_SSTatrend.eps'
 #figfile2 ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/NorthTest_SSTatrend.png'
 #figfile_psd ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/PCsm_psd_5-8modes_SSTatrend.png'
 #figfile_psdall ='/home/ecougnon/Desktop/WorkingFigures/vSZ/EOF/PCsm_psdall_5-8modes_SSTatrend_zoom.png'
@@ -56,6 +57,8 @@ PP = (xr.open_dataset(fname_ppr)['TMM'][0,:,:] - \
       xr.open_dataset(fname_ppr)['TMM'][1,:,:]) \
      / xr.open_dataset(fname_ppr)['TMM'][0,:,:]
 '''
+
+'''
 #################################################
 # NINO34
 #################################################
@@ -74,7 +77,7 @@ nino34_monthly = signal.detrend(nino34_monthly)
 var_comp = nino34_monthly*10 # factor 10 to be readable on the figure
 time_month = pd.date_range('1982-01-01','2016-12-31',name='time',freq='M')
 time_yr = pd.date_range('1982-01-01','2016-12-31',name='time',freq='12M')
-
+'''
 
 #########################################################
 ## plotting 
@@ -83,65 +86,82 @@ lev = np.hstack((np.arange(-0.07,-0.001+0.001,0.01), \
                  np.arange(0.001,0.07+0.001,0.01)))
 lev_cb = np.arange(-0.07,0.07+0.02,0.02)
 
+# EOF maps
 plt.figure(figsize=(10,17)) 
 plt.clf()
 
-ax1 = plt.subplot(4,2,1,projection=ccrs.PlateCarree()) 
+ax1 = plt.subplot(2,2,1,projection=ccrs.PlateCarree()) 
 ax1.add_feature(cfeature.LAND)
 ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
-plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-hmode,:,:], \
+plt.contourf(lon, lat, -xr.open_dataset(fname)['eof_maps'][-hmode,:,:], \
              levels = lev, cmap=plt.cm.RdYlBu_r)
-cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.5)
 plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-hmode,:,:], \
             levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
+ax1.set_xlim([90, 180])
+ax1.set_ylim([-55, 10])
+ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('EOF' + str(hmode) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-hmode].values,decimals=1)) + \
           '%', fontsize=16, y=1.04)
 
-ax2 = plt.subplot(4,2,3,projection=ccrs.PlateCarree()) 
+ax2 = plt.subplot(2,2,3,projection=ccrs.PlateCarree()) 
 ax2.add_feature(cfeature.LAND)
 ax2.coastlines('50m', linewidth=0.8)
 ax2.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+1),:,:], \
              levels = lev, cmap=plt.cm.RdYlBu_r)
-cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.5)
 plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+1),:,:], \
             levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
+ax2.set_xlim([90, 180])
+ax2.set_ylim([-55, 10])
+ax2.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax2.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('EOF' + str(hmode+1) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+1)].values,decimals=1)) + \
           '%', fontsize=16, y=1.04)
 
-ax3 = plt.subplot(4,2,5,projection=ccrs.PlateCarree()) 
+ax3 = plt.subplot(2,2,2,projection=ccrs.PlateCarree()) 
 ax3.add_feature(cfeature.LAND)
 ax3.coastlines('50m', linewidth=0.8)
 ax3.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+2),:,:], \
              levels = lev, cmap=plt.cm.RdYlBu_r)
-cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.5)
 plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+2),:,:], \
             levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
+ax3.set_xlim([90, 180])
+ax3.set_ylim([-55, 10])
+ax3.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax3.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('EOF' + str(hmode+2) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+2)].values,decimals=1)) + \
           '%', fontsize=16, y=1.04)
 
-ax4 = plt.subplot(4,2,7,projection=ccrs.PlateCarree())
+ax4 = plt.subplot(2,2,4,projection=ccrs.PlateCarree())
 ax4.add_feature(cfeature.LAND)
 ax4.coastlines('50m', linewidth=0.8)
 ax4.gridlines()
 plt.contourf(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+3),:,:], \
              levels = lev, cmap=plt.cm.RdYlBu_r)
-cb=plt.colorbar(ticks=lev_cb,shrink=0.7)
+cb=plt.colorbar(ticks=lev_cb,shrink=0.5)
 plt.contour(lon, lat, xr.open_dataset(fname)['eof_maps'][-(hmode+3),:,:], \
             levels=[0], color='k')
 #plt.contour(lon_map, lat_map, PP_vSZ, levels=[PP_F90], colors='C2')
+ax4.set_xlim([90, 180])
+ax4.set_ylim([-55, 10])
+ax4.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
+ax4.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('EOF' + str(hmode+3) +', ' \
           + str(np.around(xr.open_dataset(fname)['eigvalP'][-(hmode+3)].values,decimals=1)) + \
           '%', fontsize=16, y=1.04)
-
+'''
 ax5 = plt.subplot(4,2,2)
 #r1, _ = st.spearmanr(xr.open_dataset(fname)['PCs'][-hmode,:],var_comp)
 ax_pc = plt.gca()
@@ -178,7 +198,10 @@ plt.plot(time_month,xr.open_dataset(fname)['PCs'][-(hmode+3),:],'k')
 #plt.title('PC' + str(hmode+3) + ' with NINO3.4 index')
 plt.grid()
 
-plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+plt.savefig(figfile, bbox_inches='tight', format='eps', dpi=300)
+'''
+plt.savefig(figfile, bbox_inches='tight', format='eps', dpi=300)
+
 plt.show(block=False)
 
 '''

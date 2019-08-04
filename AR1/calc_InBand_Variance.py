@@ -58,7 +58,7 @@ lon_bin = 1
 lat_wanted = -5
 lon_wanted = 170
 if WHICH == 'TMM':
-    fname = '../../ana/SSTa_monthly_extremes_Aus.nc'
+    fname = '../tmp_data2plot/SSTa_monthly_extremes_Aus.nc'
 #?SSTa_daily_Aus.nc'
 #SSTa_monthly_extremes_Aus.nc'
     lat = xr.open_dataset(fname)['lat'].sel(lat=slice(lat_min,lat_max,lat_bin))
@@ -97,8 +97,10 @@ elif WHICH == 'HadISST':
         dsst[:,i] = np.squeeze(tmp_dsea[:,0])
     SSTa_TMm = dsst.reshape(len(tim),Y,X)
 
-figfile ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.png'
-figfile_ ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
+#figfile ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.png'
+#figfile_ ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
+
+figfile_ = '../tmp_data2plot/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
 
 '''
 # testing at 1 location
@@ -251,10 +253,13 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand1_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand1_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(np.nanmin(InBand1_p_norm), \
-             np.nanmax(InBand1_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(np.nanmin(InBand1_p_norm), \
+#             np.nanmax(InBand1_p_norm)), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(5,55+5,5),cmap=plt.cm.afmhot_r)
+levels=np.arange(-2,2.2,0.2),
 #plt.gca().invert_yaxis() # to use with HAdISST dataset
-plt.colorbar(shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(5,55+5,10),shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
@@ -277,10 +282,12 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand4_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand4_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(np.nanmin(InBand4_p_norm), \
-             np.nanmax(InBand4_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(np.nanmin(InBand4_p_norm), \
+#             np.nanmax(InBand4_p_norm)), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar(shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
@@ -294,14 +301,16 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand7_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand7_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(np.nanmin(InBand7_p_norm), \
-             np.nanmax(InBand7_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(np.nanmin(InBand7_p_norm), \
+#             np.nanmax(InBand7_p_norm)), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
+cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
 ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
-plt.colorbar(shrink=0.7)
 plt.title('7-10yrs; ' + str(max(0,round(np.nanmin(InBand7_p_norm),1))) +' - ' + \
            str(round(np.nanmax(InBand7_p_norm),1)) +' %')
 
@@ -311,10 +320,12 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand0_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand0_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand0_p_norm,levels=np.arange(np.nanmin(InBand0_p_norm), \
-             np.nanmax(InBand0_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.contourf(lon, lat, InBand0_p_norm,levels=np.arange(np.nanmin(InBand0_p_norm), \
+#             np.nanmax(InBand0_p_norm)), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand0_p_norm,levels=np.arange(10,80+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar(shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(10,80+5,10),shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
@@ -328,10 +339,12 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand10_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand10_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(np.nanmin(InBand10_p_norm), \
-             np.nanmax(InBand10_p_norm)), cmap=plt.cm.afmhot_r)
+#plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(np.nanmin(InBand10_p_norm), \
+#             np.nanmax(InBand10_p_norm)), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar(shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
@@ -348,14 +361,15 @@ ax1.gridlines()
 plt.contourf(lon, lat, InBand_all_p,levels=np.arange(0, 1.2, 0.1), \
              cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-plt.colorbar(shrink=0.7)
+cb=plt.colorbar(shrink=0.7)
+cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
 ax1.set_xticks(np.arange(90,181,30), crs=ccrs.PlateCarree())
 ax1.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 plt.title('Total Variance')
 
-plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
+#plt.savefig(figfile, bbox_inches='tight', format='png', dpi=300)
 plt.savefig(figfile_, bbox_inches='tight', format='eps', dpi=300)
 
 '''
