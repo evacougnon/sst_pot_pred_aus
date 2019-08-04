@@ -1,17 +1,14 @@
+scripts used during my work on potential predictability
+of SSTa around Australia (2017-2019; IMAS-UTAS)
+
+mostly using python
+
 Short description of the scripts per folder
 
-AR1: auto correlation studies + potential predictability
-gen_annual_extremes.py: by Eric O.
-			generate the annual time series from the daily SSTs 
-OTEs_ts_AR1.py: by Eric O.
-		perform the AR1 fit and plots
-trendSimAR1.py: Eric O.
-		supporting function file for the AR1 fitting
-		--> moved to library a they are functions
+AR_PotPred: potential predictability scripts
 
-library: you'll find usefull functions such as 
-	* trendSimAR1 -- used with OTEs_ts_AR1
-	* marine heat waves library
+libraries: where useful function are, that I created or got from someone
+           else, please see the acknowledgement at the start of the scripts
 
 
 
