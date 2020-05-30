@@ -13,19 +13,19 @@ import xarray as xr
 #from matplotlib import pyplot as plt
 #import matplotlib
 #import mpl_toolkits.basemap as bm
-import matplotlib as mpl
-mpl.use('TkAgg')  # or whatever other backend that you want
+#import matplotlib as mpl
+#mpl.use('TkAgg')  # or whatever other backend that you want
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 
 #fname = '/v_Munk_Drive/ecougnon/ana/PotPred/PP_SSTa_daily_1yr_vSZ_Aus.nc'
-fname = '../tmp_data2plot/PP_SSTa_daily_1yr_vSZ_Aus.nc'
+#fname = '../tmp_data2plot/PP_SSTa_daily_1yr_vSZ_Aus.nc'
 #PP_SSTa_daily_1yr_vSZ_Aus.nc'
-fname_='../tmp_data2plot/PP_SSTa_daily_1month_vSZ_Aus.nc' #PP_SSTa_monthly_1yr_vSZ_Aus.nc'
+#fname_='../tmp_data2plot/PP_SSTa_daily_1month_vSZ_Aus.nc' #PP_SSTa_monthly_1yr_vSZ_Aus.nc'
 #'../../ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
-#fname = '../../ana/PotPred/PP_SSTa_monthly_1yr_ZFL_Aus.nc'
+fname = '/home/ecougnon/Documents/PotPred_paper/data/PP_SSTa_HadISST_vSZ_Aus.nc'
 #PP_SSTa_trend_monthly_1yr_ZFL_Aus.nc'
 #PP_35yrsStart_monthly_1yr_ZFL_Aus.nc'
 #PP_SSTa_monthly_1yr_ZFL_Aus.nc'
@@ -34,16 +34,16 @@ fname_='../tmp_data2plot/PP_SSTa_daily_1month_vSZ_Aus.nc' #PP_SSTa_monthly_1yr_v
 #fname = '/home/ecougnon/ana/PotPred/PP_HadISST_monthly_5yr_ZFL_global.nc'
 #figfile = '/home/ecougnon/ana/PotPred/PPratio_SSTa_TMM_1yr_ZFL_sign_vSZ.png'
 #PPratio_OTE_p90_1yr_ZFL_Aus.png'
-#figfile = '/v_Munk_Drive/ecougnon/ana/PotPred/PPR_vSZ_day_1yr.png'
-figfile = '../tmp_data2plot/PPR_vSZ_day_diff.eps'
+figfile = '/home/ecougnon/Documents/PotPred_paper/figures/PPR_vSZ_month_1yr_HadISST.png'
+#figfile = '../tmp_data2plot/PPR_vSZ_day_diff.eps'
 
 # when using a nc file
-lat_map = xr.open_dataset(fname)['lat']
-lon_map = xr.open_dataset(fname)['lon']
-PP = xr.open_dataset(fname)['TMM'] #Pdays_p90'] #TMM']
-PP = PP.transpose('PP_keys','lat','lon')
-PP_ = xr.open_dataset(fname_)['TMM']
-PP2plot = ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]) - ((PP_[0,:,:]- PP_[1,:,:]) / PP_[0,:,:])
+lat_map = xr.open_dataset(fname)['latitude']
+lon_map = xr.open_dataset(fname)['longitude']
+PP = xr.open_dataset(fname)['TMM']
+PP = PP.transpose('PP_keys','latitude','longitude')
+#PP_ = xr.open_dataset(fname_)['TMM'] # when plotting the difference (tau = 365 anad tau = 30 days with NOAAOISST dataset)
+PP2plot = ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]) # - ((PP_[0,:,:]- PP_[1,:,:]) / PP_[0,:,:])
 
 '''
 data = np.load(fname+'.npz')
@@ -79,7 +79,7 @@ ax.gridlines()
 #proj.drawmeridians(range(domain_draw[1],domain_draw[3]+1,dlon), \
 #                   labels=[False,False,False,True], fontsize=14)
 #lonproj, latproj = proj(llon, llat)
-'''
+
 plt.contourf(lon_map, lat_map, ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]), \
              levels=np.arange(0,1.1,0.1), cmap=plt.cm.afmhot_r, \
              transform=ccrs.PlateCarree())
@@ -87,12 +87,9 @@ plt.contourf(lon_map, lat_map, ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]), \
 plt.contourf(lon_map, lat_map, PP2plot, \
              levels=np.arange(-2,2.2,0.2), cmap=plt.cm.RdYlBu_r, \
              transform=ccrs.PlateCarree())
-
-#plt.contourf(lonproj, latproj, ((PP[0,:,:]- PP[1,:,:]) / PP[0,:,:]), \
-#levels=np.arange(0,3+0.1,0.1), \
-#                  cmap=plt.cm.afmhot_r)  #Oranges)#YlOrBr)
-cb=plt.colorbar(ticks=np.arange(-1.8,1.8+0.2,0.4),shrink=0.7) 
-#ticks=np.arange(-0.5,0.5+0.01,0.1),shrink=0.9)
+'''
+cb=plt.colorbar(ticks=np.arange(-0.5,1+0.01,0.1),shrink=0.9)
+#ticks=np.arange(-1.8,1.8+0.2,0.4),shrink=0.7)
 cb.ax.tick_params(labelsize=14)
 ax.set_xlim([90, 180])
 ax.set_ylim([-55, 10])
@@ -106,7 +103,8 @@ ax.set_yticks(np.arange(-50,11,10), crs=ccrs.PlateCarree())
 #plt.title('PP ratio - TMM based on ZFL with vSZ ratio (significance based on vSZ in grey)', \
 #          fontsize=16, y=1.08)
 #plt.title('PPR from daily SSTA using vSZ (365-day chunk size)')
-plt.savefig(figfile,bbox_inches='tight', format='eps', dpi=300)
+plt.title('PPR from monthly HadISST SSTa using vSZ (12-months chunk size) 1871-2016')
+plt.savefig(figfile,bbox_inches='tight', format='png', dpi=300)
 plt.show(block=False)
 
 

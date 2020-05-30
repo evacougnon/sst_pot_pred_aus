@@ -22,56 +22,55 @@ import xarray as xr
 import time as time
 
 from matplotlib import pyplot as plt
-#import mpl_toolkits.basemap as bm
+# import mpl_toolkits.basemap as bm
 
 import sys
-sys.path.insert(0,'../libraries/')
+
+sys.path.insert(0, '../libraries/')
 import eac_useful as eac
 import eric_oliver as eo
 
 # load useful information
 # useful numbers
 # tau -- number of months per chunk
-tau = 12 
+tau = 12
 # days -- lengths of the chunk
-#outfile = '/home/ecougnon/ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
-outfile = '/home/ecougnon/Desktop/testing_PotPred.nc'
-fname = '../../ana/SSTa_monthly_extremes_Aus.nc'
-#OTEs_NumDays_month_Aus_19822016.nc'
-#fname = '/home/ecougnon/data/HadISST_sst.nc'
+# outfile = '/home/ecougnon/ana/PotPred/PP_SSTa_monthly_1yr_vSZ_Aus.nc'
+outfile = '/home/ecougnon/Documents/PotPred_paper/data/PP_SSTa_HadISST_vSZ_Aus_1982.nc'
+fname = '/home/ecougnon/Documents/PotPred_paper/data/HadISST_sst.nc'
 ##############
 # be sure they are anomalies, if not set check = 1
-check = 0
+check = 1
 ###############
-deg_res = 0.25 #1 #5
-lat_min = -55 #-80 #-20 #-55
-lat_max = 10 #80 #20 #10
-lat_bin = 1 #4 * deg_res
-lon_min = 90 #1 #160 #90
-lon_max = 180 #360 #270 #180
-lon_bin = 1 #4 * deg_res
-lat = xr.open_dataset(fname)['lat']
-#lat = lat.sel(lat=slice(lat_min,lat_max,lat_bin))
-lon = xr.open_dataset(fname)['lon']
-#lon = lon.sel(lon=slice(lon_min,lon_max,lon_bin))
+deg_res = 1 #0.25  # 1 #5
+lat_min = -55  # -80 #-20 #-55
+lat_max = 10  # 80 #20 #10
+lat_bin = 1  # 4 * deg_res
+lon_min = 90  # 1 #160 #90
+lon_max = 180  # 360 #270 #180
+lon_bin = 1  # 4 * deg_res
+lat = xr.open_dataset(fname)['latitude']
+lat = lat.sel(latitude=slice(lat_max, lat_min, lat_bin))  # HadISST
+lon = xr.open_dataset(fname)['longitude']
+lon = lon.sel(longitude=slice(lon_min, lon_max, lon_bin))  # HadISST
 tim = xr.open_dataset(fname)['time']
-#tim = tim.sel(time=slice('1871-01-01','2016-01-01'))
-SST = xr.open_dataset(fname)['TMM']
-SST = SST.sel(time=tim, lat=lat, lon=lon)
+tim = tim.sel(time=slice('1982-01-01', '2016-01-01'))  # HadISST
+SST = xr.open_dataset(fname)['sst']  # TMM
+SST = SST.sel(time=tim, latitude=lat, longitude=lon)
 T_keys = ['TMM']
 # time period
-MinYear = 1982 #1870 #1982
-MaxYear = 2016 # 2016
-NumYears = MaxYear - MinYear+1
-NumMonths = NumYears*12
+MinYear = 1982  # 1871# #1982
+MaxYear = 2015  # 2016
+NumYears = MaxYear - MinYear + 1
+NumMonths = NumYears * 12
 # define the start/end indexes for each chunk
-str_id = range(0,NumMonths,tau)
-end_id = range(tau-1,NumMonths+1,tau)
+str_id = range(0, NumMonths, tau)
+end_id = range(tau - 1, NumMonths + 1, tau)
 NumChunk = len(str_id)
 
 # allocate memory
-#PP_keys = ['Var_interC','Var_noise','Var_slow','p']
-PP_keys = ['Var_interC', 'Var_noise', 'p', 'F90', 'F95']
+# PP_keys = ['Var_interC','Var_noise','Var_slow','p'] # using ZFJ method
+PP_keys = ['Var_interC', 'Var_noise', 'p', 'F90', 'F95']  # using vSZ method
 '''
 describe the keys ..
 Var_interC -- total inter chunk variance
@@ -82,49 +81,45 @@ p -- Potential inter-chunk predictability
 X = len(lon)
 Y = len(lat)
 var = len(PP_keys)
-PP = xr.Dataset({'TMM':(('PP_keys','lat','lon'),np.zeros((var, Y, X)))}, \
-#                 'TMX':(('PP_keys','lat','lon'),np.zeros((var, Y, X))), \
-#                 'TMN':(('PP_keys','lat','lon'),np.zeros((var, Y, X))), \
-#                 'Tp90':(('PP_keys','lat','lon'),np.zeros((var, Y, X))), \
-#                 'Tp10':(('PP_keys','lat','lon'),np.zeros((var, Y, X)))}, \
-                {'PP_keys': PP_keys, 'lat': lat, 'lon': lon})
+PP = xr.Dataset({'TMM': (('PP_keys', 'latitude', 'longitude'), np.zeros((var, Y, X)))}, \
+                {'PP_keys': PP_keys, 'latitude': lat, 'longitude': lon})
 
 for key in T_keys:
     t_key = time.time()
     print(key)
 
-# the data should already be anomalies (detrended and deseasonned)
+    # the data should already be anomalies (detrended and deseasonned)
     SST = np.array(SST)
 
-    if check==1: # do anomalies (deseasonned and detrended)
+    if check == 1:  # do anomalies (deseasonned and detrended)
         # detrend the time series
-        SST[SST<-100]=np.nan
-        SST_flat = SST.reshape(len(tim),X*Y)
-        dsst = np.empty((len(tim),X*Y))
+        SST[SST < -100] = np.nan
+        SST_flat = SST.reshape(len(tim), X * Y)
+        dsst = np.empty((len(tim), X * Y))
         dsst.fill(np.nan)
-        tt=np.arange(0,len(tim))
-        for i in range(0,len(SST_flat[0,:])):
-            valid = ~np.isnan(SST_flat[:,i])
-            if (valid.any()==True):
-                y = SST_flat[:,i]
-                mean, trend, alpha = eo.trend(tt,y)
-                dsst[:,i] = y - (tt*trend) -mean
-#                dsst[:,i] = signal.detrend(SST_flat[valid,i], axis=0, type='linear')
-            elif (valid.all()==False):
-                dsst[:,i] = np.nan
-            tmp_dsea, sea, beta = eo.deseason_harmonic(dsst[:,i],4,12)
-            dsst[:,i] = np.squeeze(tmp_dsea[:,0])
-        DSST = dsst.reshape(len(tim),Y,X)
+        tt = np.arange(0, len(tim))
+        for i in range(0, len(SST_flat[0, :])):
+            valid = ~np.isnan(SST_flat[:, i])
+            if (valid.any() == True):
+                y = SST_flat[:, i]
+                mean, trend, alpha = eo.trend(tt, y)
+                dsst[:, i] = y - (tt * trend) - mean
+            #                dsst[:,i] = signal.detrend(SST_flat[valid,i], axis=0, type='linear')
+            elif (valid.all() == False):
+                dsst[:, i] = np.nan
+            tmp_dsea, sea, beta = eo.deseason_harmonic(dsst[:, i], 4, 12)
+            dsst[:, i] = np.squeeze(tmp_dsea[:, 0])
+        DSST = dsst.reshape(len(tim), Y, X)
         SST = DSST.copy()
 
-## apply PotPred_ZhengFred function on a single time series
-#    PP[key][:,:,:] = np.apply_along_axis(eac.PotPred_ZhengFred,0, SST[:,:,:],tau, \
-#                                         NumChunk, str_id,end_id)
+    ## apply PotPred_ZhengFred function on a single time series
+    #    PP[key][:,:,:] = np.apply_along_axis(eac.PotPred_ZhengFred,0, SST[:,:,:],tau, \
+    #                                         NumChunk, str_id,end_id)
 
-# apply PotPred_vStorchZwiers function on a single time series
-    PP[key][:,:,:] = np.apply_along_axis(eac.PotPred_vStorchZwiers,0, \
-                                         SST[:,:,:],tau, \
-                                         NumChunk, str_id,end_id)
+    # apply PotPred_vStorchZwiers function on a single time series
+    PP[key][:, :, :] = np.apply_along_axis(eac.PotPred_vStorchZwiers, 0, \
+                                           SST[:, :, :], tau, \
+                                           NumChunk, str_id, end_id)
 
     elapsed_key = time.time() - t_key
     print('elapsed time for each key:', elapsed_key)
@@ -133,8 +128,6 @@ for key in T_keys:
 PP.to_netcdf(outfile)
 print('data saved')
 
-
-    
 '''
 icnt_id = 0
 for i in range(0,len(SST['lon'])):
@@ -173,8 +166,7 @@ for i in range(0,len(SST['lon'])):
     icnt_id = icnt_id + 1
 '''
 
-
-#'''
+# '''
 ## climatology
 ##                t_clim = time.time()
 #                clim = SST[key][:,j,i].groupby('time.month').mean('time')
@@ -186,5 +178,4 @@ for i in range(0,len(SST['lon'])):
 #                dsst = signal.detrend(sst_a,type='linear')
 ##                elapsed_det = time.time() - t_det
 ##                print('elapsed time for each detrend:', elapsed_det)
-#'''
-
+# '''
