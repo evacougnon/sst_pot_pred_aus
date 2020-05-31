@@ -23,8 +23,8 @@ sys.path.insert(0,'../libraries/')
 import eac_useful as eac
 import eric_oliver as eo
 
-import matplotlib as mpl
-mpl.use('TkAgg')  # or whatever other backend that you want
+#import matplotlib as mpl
+#mpl.use('TkAgg')  # or whatever other backend that you want
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -33,8 +33,6 @@ import cartopy.feature as cfeature
 ###########################
 # I/O file names
 #########################
-#outfile = 
-#figfile = '/home/ecougnon/ana/PotPred/InBand/'
 
 ############################
 # define region and load data
@@ -48,7 +46,7 @@ import cartopy.feature as cfeature
 # 'HadISST' to use for the HadISST file
 # already monthly SSTs
 ############################
-WHICH = 'TMM' #'HadISST' #'TMM'
+WHICH = 'HadISST' #'HadISST' #'TMM'
 lat_min = -56
 lat_max = 10
 lat_bin = 1
@@ -58,7 +56,7 @@ lon_bin = 1
 lat_wanted = -5
 lon_wanted = 170
 if WHICH == 'TMM': # uses the NOAAOISSTv2 dataset
-    fname = '../PotPred_paper/SSTa_daily_Aus.nc'
+    fname = 'SSTa_daily_Aus.nc'
 #SSTa_monthly_extremes_Aus.nc'
     lat = xr.open_dataset(fname)['lat'].sel(lat=slice(lat_min,lat_max,lat_bin))
     lon = xr.open_dataset(fname)['lon'].sel(lon=slice(lon_min,lon_max,lon_bin))
@@ -67,12 +65,12 @@ if WHICH == 'TMM': # uses the NOAAOISSTv2 dataset
     X = len(lon)
     Y = len(lat)
 elif WHICH == 'HadISST': # check patterns with a longer timeseries
-    fname = '/home/ecougnon/Desktop/WorkingFigures/HadSST3/HadISST_sst.nc'
+    fname = '/home/ecougnon/Documents/PotPred_paper/data/HadISST_sst.nc'
     lat = xr.open_dataset(fname)['latitude']. \
              sel(latitude=slice(lat_max,lat_min,lat_bin))
     lon = xr.open_dataset(fname)['longitude']. \
              sel(longitude=slice(lon_min,lon_max,lon_bin))
-    tim = xr.open_dataset(fname)['time'].sel(time=slice('1960-01-01','2016-12-31'))
+    tim = xr.open_dataset(fname)['time'].sel(time=slice('1871-01-01','2016-12-31'))
     SST = xr.open_dataset(fname)['sst'].sel(time=tim, latitude=lat, longitude=lon)
     X = len(lon)
     Y = len(lat)
@@ -99,7 +97,7 @@ elif WHICH == 'HadISST': # check patterns with a longer timeseries
 #figfile ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.png'
 #figfile_ ='/v_Munk_Drive/ecougnon/ana/InBand_Variance/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
 
-figfile_ = '../PotPred_paper/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10.eps'
+figfile_ = '/home/ecougnon/Documents/PotPred_paper/figures/InBandVar_SmoothPeriodogram_Scaling2TotVar_1-3-7-10_HadISST_1871.eps'
 
 
 ####################################
@@ -221,10 +219,10 @@ ax1.gridlines()
 #plt.contourf(InBand1_p_norm_,levels=levs, cmap=plt.cm.viridis)
 #plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(np.nanmin(InBand1_p_norm), \
 #             np.nanmax(InBand1_p_norm)), cmap=plt.cm.afmhot_r)
-plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(5,55+5,5),cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand1_p_norm,levels=np.arange(5,60+5,5),cmap=plt.cm.afmhot_r)
 levels=np.arange(-2,2.2,0.2),
 #plt.gca().invert_yaxis() # to use with HAdISST dataset
-cb=plt.colorbar(ticks=np.arange(5,55+5,10),shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(5,60+5,10),shrink=0.7)
 cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
@@ -250,9 +248,9 @@ ax1.gridlines()
 #plt.contourf(InBand4_p_norm_,levels=levs, cmap=plt.cm.viridis)
 #plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(np.nanmin(InBand4_p_norm), \
 #             np.nanmax(InBand4_p_norm)), cmap=plt.cm.afmhot_r)
-plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand4_p_norm,levels=np.arange(0,55+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(0,55+5,5),shrink=0.7)
 cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
@@ -269,9 +267,9 @@ ax1.gridlines()
 #plt.contourf(InBand7_p_norm_,levels=levs, cmap=plt.cm.viridis)
 #plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(np.nanmin(InBand7_p_norm), \
 #             np.nanmax(InBand7_p_norm)), cmap=plt.cm.afmhot_r)
-plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand7_p_norm,levels=np.arange(0,35+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(0,35+5,5),shrink=0.7)
 cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
@@ -307,9 +305,9 @@ ax1.gridlines()
 #plt.contourf(InBand10_p_norm_,levels=levs, cmap=plt.cm.viridis)
 #plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(np.nanmin(InBand10_p_norm), \
 #             np.nanmax(InBand10_p_norm)), cmap=plt.cm.afmhot_r)
-plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(0,30+5,5), cmap=plt.cm.afmhot_r)
+plt.contourf(lon, lat, InBand10_p_norm,levels=np.arange(0,60+5,5), cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
-cb=plt.colorbar(ticks=np.arange(0,30+5,5),shrink=0.7)
+cb=plt.colorbar(ticks=np.arange(0,60+5,5),shrink=0.7)
 cb.ax.tick_params(labelsize=10)
 ax1.set_xlim([90, 180])
 ax1.set_ylim([-55, 10])
@@ -324,7 +322,7 @@ ax1.coastlines('50m', linewidth=0.8)
 ax1.gridlines()
 #plt.contourf(InBand10_p, cmap=plt.cm.viridis)
 #plt.contourf(InBand10_p_norm_,levels=levs, cmap=plt.cm.viridis)
-plt.contourf(lon, lat, InBand_all_p,levels=np.arange(0, 1.2, 0.1), \
+plt.contourf(lon, lat, InBand_all_p,levels=np.arange(0, 0.8, 0.1), \
              cmap=plt.cm.afmhot_r)
 #plt.gca().invert_yaxis()
 cb=plt.colorbar(shrink=0.7)
